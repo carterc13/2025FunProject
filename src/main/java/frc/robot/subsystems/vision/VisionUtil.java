@@ -4,6 +4,12 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
+// Copyright (c) 2025 FRC 5712
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
 package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.DegreesPerSecond;
@@ -12,6 +18,10 @@ import static edu.wpi.first.units.Units.Meters;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -35,13 +45,27 @@ public class VisionUtil {
       Meters.of(0.5); // Meters above/below field to accept measurements
   public static final AngularVelocity MT2_SPIN_MAX =
       DegreesPerSecond.of(40.0); // Maximum rotation speed for MT2 measurements
-  public static final double MIN_TAG_AREA = 0.05; // Minimum tag area to be accepted
+  public static final double MIN_TAG_AREA = 0.1; // Minimum tag area to be accepted
 
   // Vision measurement constants for MA mode
   private static final double MA_VISION_STD_DEV_XY = 0.333; // Base XY standard deviation
-  private static final double MA_VISION_STD_DEV_THETA = 5.0; // Base theta standard deviation
+  private static final double MA_VISION_STD_DEV_THETA =
+      Double.MAX_VALUE; // Base theta standard deviation
   public static final double MA_AMBIGUITY =
-      0.4; // Maximum allowed ambiguity for single-tag measurements
+      0.3; // Maximum allowed ambiguity for single-tag measurements
+
+  public static Transform2d getTagOffset(
+      Transform3d cameraToTag, Transform3d visionStdDev, Transform2d desiredOffset) {
+    Transform3d robotToTargetPose = cameraToTag.plus(visionStdDev);
+    Transform2d robotOffset =
+        new Transform2d(
+            new Translation2d(
+                robotToTargetPose.getX() - desiredOffset.getX(),
+                robotToTargetPose.getY() - desiredOffset.getY()),
+            new Rotation2d(
+                robotToTargetPose.getRotation().getZ() - desiredOffset.getRotation().getRadians()));
+    return robotOffset;
+  }
 
   /**
    * Enum defining different vision processing modes with unique validation and measurement
@@ -75,8 +99,8 @@ public class VisionUtil {
       public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
         double xyStdDev = calculateStdDev(mt, MA_VISION_STD_DEV_XY);
         // MT2 measurements don't provide reliable rotation data
-        double thetaStdDev =
-            mt.isMegaTag2() ? Double.MAX_VALUE : calculateStdDev(mt, MA_VISION_STD_DEV_THETA);
+        double thetaStdDev = Double.MAX_VALUE;
+        // mt.isMegaTag2() ? Double.MAX_VALUE : calculateStdDev(mt, MA_VISION_STD_DEV_THETA);
         return new VisionMeasurement(mt, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
       }
 
@@ -317,6 +341,7 @@ public class VisionUtil {
         || robotPose.getMeasureY().gt(FieldConstants.fieldWidth.plus(FIELD_MARGIN))
         || robotPose.getMeasureZ().lt(Z_MARGIN.unaryMinus())
         || robotPose.getMeasureZ().gt(Z_MARGIN);
+    // || !robotPose.getRotation().getMeasureY().isNear(Rotations.of(0), Rotations.of(3))
   }
 
   /**

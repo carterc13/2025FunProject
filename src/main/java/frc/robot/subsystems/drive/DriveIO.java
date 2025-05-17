@@ -7,24 +7,30 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volt;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.utils.ArrayBuilder;
@@ -46,13 +52,27 @@ public interface DriveIO {
     // Position and motion state
     public Pose2d pose = Pose2d.kZero;
     public ChassisSpeeds speeds = new ChassisSpeeds();
-    public Rotation2d operatorForwardDirection = Rotation2d.kZero;
+    public Rotation2d operatorForwardDirection = new Rotation2d(Units.degreesToRadians(90));
 
     // Diagnostic data
     public double odometryPeriod = 0.0;
     public int successfulDaqs = 0;
     public int failedDaqs = 0;
     public boolean odometryIsValid = false;
+
+    public Angle roll = Degrees.of(0);
+    public Angle pitch = Degrees.of(0);
+    public Angle yaw = Degrees.of(0);
+
+    public Rotation3d rotation3d = new Rotation3d();
+    public Voltage supplyVoltage = Volts.of(0);
+    public double temperatureC = 0;
+    public Angle accumZ = Degrees.of(0);
+    public Angle accumY = Degrees.of(0);
+    public Angle accumX = Degrees.of(0);
+    public LinearAcceleration acelz = MetersPerSecondPerSecond.of(0);
+    public LinearAcceleration acely = MetersPerSecondPerSecond.of(0);
+    public LinearAcceleration acelx = MetersPerSecondPerSecond.of(0);
 
     // Sensor data
     public double[] timestamp = new double[0];

@@ -6,7 +6,9 @@
 
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -54,6 +56,10 @@ public class DriveIOCTRE extends TunerSwerveDrivetrain implements DriveIO {
   private final Queue<Double> timestampQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
   private final List<Queue<Double>> drivePositionQueues = new ArrayList<>();
   private final List<Queue<Rotation2d>> steerPositionQueues = new ArrayList<>();
+
+  public Timer timer = new Timer();
+
+  public Orchestra m_orchestra = new Orchestra();
 
   /**
    * Creates a new DriveIOCTRE with specified update frequency.
@@ -104,6 +110,36 @@ public class DriveIOCTRE extends TunerSwerveDrivetrain implements DriveIO {
     registerTelemetry(this::updateTelemetry);
     super.getOdometryThread().setThreadPriority(2);
     setupSimulation();
+
+    // TEST
+    getPigeon2().getConfigurator().apply(new Pigeon2Configuration());
+    getPigeon2().getConfigurator().setYaw(0.0);
+
+    // // Attempt to load the chrp
+    // var status =
+    //     m_orchestra.loadMusic(
+    //         Filesystem.getDeployDirectory()
+    //             .toPath()
+    //             .resolve("orchestra" + File.separator + "output5.chrp")
+    //             .toString());
+
+    // if (!status.isOK()) {
+    //   // log error
+    // }
+
+    // m_orchestra.addInstrument(super.getModule(0).getDriveMotor(), 2);
+    // m_orchestra.addInstrument(super.getModule(1).getDriveMotor(), 2);
+    // m_orchestra.addInstrument(super.getModule(2).getDriveMotor(), 2);
+    // m_orchestra.addInstrument(super.getModule(3).getDriveMotor(), 2);
+
+    // m_orchestra.addInstrument(super.getModule(0).getSteerMotor(), 2);
+    // m_orchestra.addInstrument(super.getModule(1).getSteerMotor(), 2);
+    // m_orchestra.addInstrument(super.getModule(2).getSteerMotor(), 2);
+    // m_orchestra.addInstrument(super.getModule(3).getSteerMotor(), 2);
+
+    // m_orchestra.play();
+    // timer.reset();
+    // timer.start();
   }
 
   /** Initializes the position queues for drive and steer data. */
@@ -133,6 +169,22 @@ public class DriveIOCTRE extends TunerSwerveDrivetrain implements DriveIO {
     inputs.odometryPeriod = state.OdometryPeriod;
     inputs.successfulDaqs = state.SuccessfulDaqs;
     inputs.failedDaqs = state.FailedDaqs;
+
+    inputs.roll = getPigeon2().getRoll().getValue();
+    inputs.pitch = getPigeon2().getPitch().getValue();
+    inputs.yaw = getPigeon2().getYaw().getValue();
+
+    inputs.acelx = getPigeon2().getAccelerationX().getValue();
+    inputs.acely = getPigeon2().getAccelerationY().getValue();
+    inputs.acelz = getPigeon2().getAccelerationZ().getValue();
+
+    inputs.accumX = getPigeon2().getAccumGyroX().getValue();
+    inputs.accumY = getPigeon2().getAccumGyroY().getValue();
+    inputs.accumZ = getPigeon2().getAccumGyroZ().getValue();
+
+    inputs.rotation3d = getPigeon2().getRotation3d();
+    inputs.supplyVoltage = getPigeon2().getSupplyVoltage().getValue();
+    inputs.temperatureC = getPigeon2().getTemperature().getValueAsDouble();
 
     // Update sensor inputs
     inputs.gyroRate = getPigeon2().getAngularVelocityZWorld().getValue();

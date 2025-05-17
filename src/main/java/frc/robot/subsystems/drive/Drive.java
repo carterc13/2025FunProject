@@ -4,18 +4,28 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
+// Copyright (c) 2025 FRC 5712
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -28,6 +38,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -43,10 +55,14 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Class that extends the Phoenix 6 SwerveDrivetrain class and implements Subsystem so it can easily
- * be used in command-based projects.
+ * Class that extends the Phoenix 6 Swerveclass and implements Subsystem so it can easily be used in
+ * command-based projects.
  */
 public class Drive extends SubsystemBase {
+
+  // Load the path we want to pathfind to and follow
+  // private PathPlannerPath path = PathPlannerPath.fromPathFile("Align Alpha");
+
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
   private final ModuleIOInputsAutoLogged[] modules = ArrayBuilder.buildModuleAutoLogged();
@@ -160,7 +176,10 @@ public class Drive extends SubsystemBase {
               this));
 
   /* The SysId routine to test */
-  private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+  private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineRotation;
+
+  // logging
+  private Field2d m_field = new Field2d();
 
   public Drive(DriveIO io) {
 
@@ -168,6 +187,16 @@ public class Drive extends SubsystemBase {
     inputs = new DriveIOInputsAutoLogged();
 
     configureAutoBuilder();
+
+    PathPlannerLogging.setLogActivePathCallback(
+        (activePath) -> {
+          Logger.recordOutput(
+              "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
+        });
+    PathPlannerLogging.setLogTargetPoseCallback(
+        (targetPose) -> {
+          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+        });
   }
 
   private void configureAutoBuilder() {
@@ -195,13 +224,29 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * Returns a command that applies the specified control request to this swerve drivetrain.
+   * Returns a command that applies the specified control request to this swerve
    *
    * @param request Function returning the request to apply
    * @return Command to run
    */
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
     return run(() -> io.setControl(requestSupplier.get()));
+  }
+
+  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
+  public ChassisSpeeds getChassisSpeeds() {
+    return inputs.speeds;
+  }
+
+  public Command stop(RobotCentric requestSupplier) {
+    return run(
+        () ->
+            io.setControl(
+                requestSupplier
+                    .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+                    .withVelocityX(0)
+                    .withVelocityY(0)
+                    .withRotationalRate(0)));
   }
 
   public void setControl(SwerveRequest request) {
@@ -268,6 +313,9 @@ public class Drive extends SubsystemBase {
               });
     }
     updateWithTime();
+
+    m_field.setRobotPose(getPose());
+    SmartDashboard.putData("field", m_field);
   }
 
   public void resetPose(Pose2d pose) {
@@ -277,13 +325,39 @@ public class Drive extends SubsystemBase {
     io.resetPose(pose);
   }
 
+  /*
+  public Command goToPoint(int x, int y) {
+    Pose2d targetPose = new Pose2d(x, y, Rotation2d.fromDegrees(180));
+    PathConstraints constraints =
+        new PathConstraints(4.0, 5.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
+    return AutoBuilder.pathfindToPose(targetPose, constraints);
+  }
+  /*
+   * flips if needed
+   */
+  /*
+  public Command goToPoint(Pose2d pose) {
+    PathConstraints constraints =
+        new PathConstraints(3.0, 2.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
+    return new ConditionalCommand(
+        AutoBuilder.pathfindToPoseFlipped(pose, constraints),
+        AutoBuilder.pathfindToPose(pose, constraints),
+        () -> Robot.getAlliance());
+  }*/
+
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
+    // return new Pose2d(new Translation2d(8, 6), inputs.pose.getRotation());
     if (estimatorTrigger.getAsBoolean()) {
       return poseEstimator.getEstimatedPosition();
     }
     return inputs.pose;
+  }
+
+  public Translation2d getDistanceToPose(Pose2d pose) {
+    Pose2d currentPose = getPose();
+    return pose.minus(currentPose).getTranslation().unaryMinus();
   }
 
   public Rotation2d getRotation() {
@@ -323,9 +397,12 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the measured chassis speeds of the robot. */
-  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  public ChassisSpeeds getChassisSpeeds() {
-    return inputs.speeds;
+  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured/velocity")
+  public double getChassisVelocity() {
+
+    return Math.sqrt(
+        Math.pow(inputs.speeds.vxMetersPerSecond, 2)
+            + Math.pow(inputs.speeds.vyMetersPerSecond, 2));
   }
 
   /**
@@ -366,8 +443,17 @@ public class Drive extends SubsystemBase {
    * @param timestamp The timestamp of the vision measurement in seconds.
    */
   public void addVisionMeasurement(VisionMeasurement visionMeasurement) {
+    Logger.recordOutput(
+        "Odom minus Vision",
+        this.getRotation().getRadians()
+            - visionMeasurement.poseEstimate().pose().getRotation().getZ());
     this.addVisionMeasurement(
-        visionMeasurement.poseEstimate().pose().toPose2d(),
+        new Pose2d(
+            new Translation2d(
+                visionMeasurement.poseEstimate().pose().toPose2d().getX(),
+                visionMeasurement.poseEstimate().pose().toPose2d().getY()),
+            // this.getRotation()),
+            visionMeasurement.poseEstimate().pose().toPose2d().getRotation()),
         visionMeasurement.poseEstimate().timestampSeconds(),
         visionMeasurement.visionMeasurementStdDevs());
   }

@@ -9,15 +9,15 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.arm;
+package frc.robot.subsystems.intake;
 
 import edu.wpi.first.units.measure.Angle;
 
-public class ArmIOCTRE implements ArmIO {
-  public ArmIOCTRE() {}
+public class IntakeIOCTRE implements IntakeIO {
+  public IntakeIOCTRE() {}
 
   @Override
-  public void updateInputs(ArmIOInputs inputs) {}
+  public void updateInputs(IntakeIOInputs inputs) {}
 
   @Override
   public void setAngle(Angle angle) {}

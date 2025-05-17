@@ -15,6 +15,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import frc.robot.Constants;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class FieldConstants {
   public static final Distance fieldWidth = Inches.of(317);
   public static final Distance startingLineX =
       Inches.of(299.438); // Measured from the inside of starting line
+
   /**
    * Diameter of the algae game element in meters. Used for game piece manipulation and scoring
    * calculations.
@@ -74,6 +76,7 @@ public class FieldConstants {
     // order
     public static final List<Map<ReefHeight, Pose3d>> branchPositions =
         new ArrayList<>(); // Starting at the right
+
     // branch facing the
     // driver station in
     // clockwise
@@ -157,7 +160,14 @@ public class FieldConstants {
 
   static {
     try {
-      aprilTags = AprilTagFieldLayout.loadFromResource(kDefaultField.m_resourceFile);
+      // TODO Switch this with every SIM vs REAL
+      if (Constants.currentMode == Constants.Mode.SIM) {
+        aprilTags = AprilTagFieldLayout.loadFromResource(kDefaultField.m_resourceFile);
+      } else {
+        aprilTags = AprilTagFieldLayout.loadField(kDefaultField);
+        // AprilTagFieldLayout.loadFromResource(
+        //     "src/main/java/frc/robot/utils/wpicalfields/practicefield.json");
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
