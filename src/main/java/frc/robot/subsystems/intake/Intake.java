@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.Map;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
@@ -32,9 +33,9 @@ public class Intake extends SubsystemBase {
   }
 
   public enum IntakePosition {
-    INTAKE(Degrees.of(2), Degrees.of(2.5)),
-    HANDOFF(Degrees.of(90), Degrees.of(2.5)),
-    STOW(Degrees.of(20), Degrees.of(2.5));
+    INTAKE(Degrees.of(-45), Degrees.of(2.5)),
+    HANDOFF(Degrees.of(100), Degrees.of(1)),
+    STOW(Degrees.of(210), Degrees.of(2.5));
 
     private final Angle targetAngle;
     private final Angle angleTolerance;
@@ -57,6 +58,7 @@ public class Intake extends SubsystemBase {
     }
   }
 
+  @AutoLogOutput
   public IntakePosition getMode() {
     return currentMode;
   }
@@ -76,6 +78,7 @@ public class Intake extends SubsystemBase {
     return Commands.runOnce(() -> setAngle(position.targetAngle));
   }
 
+  @AutoLogOutput
   public boolean isAtTarget() {
     return inputs.angle.isNear(currentMode.targetAngle, currentMode.angleTolerance);
   }

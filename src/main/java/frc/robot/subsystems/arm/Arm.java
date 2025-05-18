@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.Map;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Arm extends SubsystemBase {
@@ -32,16 +33,16 @@ public class Arm extends SubsystemBase {
   }
 
   public enum ArmPosition {
-    IDLE(Degrees.of(2), Degrees.of(2.5)),
-    ALGAEIDLE(Degrees.of(90), Degrees.of(2.5)),
-    PREPINTAKE(Degrees.of(20), Degrees.of(2.5)),
-    INTAKE(Degrees.of(20), Degrees.of(2.5)),
-    CORALIDLE(Degrees.of(110), Degrees.of(2.5)),
-    NET(Degrees.of(110), Degrees.of(2.5)),
-    L1(Degrees.of(110), Degrees.of(2.5)),
-    L2(Degrees.of(110), Degrees.of(2.5)),
-    L3(Degrees.of(110), Degrees.of(2.5)),
-    L4(Degrees.of(110), Degrees.of(2.5));
+    IDLE(Degrees.of(60), Degrees.of(1.5)),
+    ALGAEIDLE(Degrees.of(65), Degrees.of(1.5)),
+    PREPINTAKE(Degrees.of(60), Degrees.of(1.5)),
+    INTAKE(Degrees.of(50), Degrees.of(1.5)),
+    CORALIDLE(Degrees.of(30), Degrees.of(1.5)),
+    NET(Degrees.of(110), Degrees.of(1.5)),
+    L1(Degrees.of(145), Degrees.of(1.5)),
+    L2(Degrees.of(125), Degrees.of(1.5)),
+    L3(Degrees.of(115), Degrees.of(1.5)),
+    L4(Degrees.of(105), Degrees.of(1.5));
 
     private final Angle targetAngle;
     private final Angle angleTolerance;
@@ -64,6 +65,7 @@ public class Arm extends SubsystemBase {
     }
   }
 
+  @AutoLogOutput
   public ArmPosition getMode() {
     return currentMode;
   }
@@ -97,6 +99,7 @@ public class Arm extends SubsystemBase {
     return Commands.runOnce(() -> setAngle(position.targetAngle));
   }
 
+  @AutoLogOutput
   public boolean isAtTarget() {
     return inputs.angle.isNear(currentMode.targetAngle, currentMode.angleTolerance);
   }
