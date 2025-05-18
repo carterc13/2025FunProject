@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import java.util.function.DoubleSupplier;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class Intake extends Command {
+public class Drop extends Command {
   /** Creates a new Intake. */
   private Pose3d endPose;
 
@@ -24,7 +24,7 @@ public class Intake extends Command {
   private double duration;
   private Timer timer = new Timer();
 
-  public Intake(DoubleSupplier posex, DoubleSupplier posey, DoubleSupplier poserotation) {
+  public Drop(DoubleSupplier posex, DoubleSupplier posey, DoubleSupplier poserotation) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.pose =
         new Pose2d(
@@ -45,8 +45,12 @@ public class Intake extends Command {
                 Units.degreesToRadians(PoseComputer.isRightSource(pose) ? 55 : -55)));
     endPose =
         new Pose3d(
-          PoseComputer.isRightSource(pose) ? (Math.random() * (2.5 - 1 + 1) + 1) : (Math.random() * (2.5 - 1 + 1) + 1),
-          PoseComputer.isRightSource(pose) ? (Math.random() * (4 - 1.5 + 1) + 1.5) : (Math.random() * (7.5 - 4 + 1) + 4),
+            PoseComputer.isRightSource(pose)
+                ? (Math.random() * (2.5 - 1 + 1) + 1)
+                : (Math.random() * (2.5 - 1 + 1) + 1),
+            PoseComputer.isRightSource(pose)
+                ? (Math.random() * (4 - 1.5 + 1) + 1.5)
+                : (Math.random() * (7.5 - 4 + 1) + 4),
             0.0,
             new Rotation3d(
                 Units.degreesToRadians(0),

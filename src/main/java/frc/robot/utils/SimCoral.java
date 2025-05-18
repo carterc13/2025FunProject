@@ -4,11 +4,14 @@
 
 package frc.robot.utils;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.State.ReefPositions;
+import frc.robot.subsystems.elevator.Elevator.ElevatorPosition;
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -18,7 +21,9 @@ public class SimCoral {
   private static ArrayList<Pose3d> poses = new ArrayList<>();
 
   public static void start() {
+    PoseComputer.setRedAlliance();
     poses.add(new Pose3d());
+    Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
   }
 
   public static void setPose(int index, Pose3d pose) {
@@ -26,32 +31,14 @@ public class SimCoral {
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
   }
 
-  public static void placeCoral() {
-    // Pose2d pose = new Pose2d();
-    // spots spot =
-    //     getSpot(
-    //         TargetingComputer.getCurrentTargetBranch(),
-    // TargetingComputer.getCurrentTargetLevel());
-    // if (spot != null && spot != spots.Level1) {
-    //   poses.add(
-    //       getSpot(
-    //               TargetingComputer.getCurrentTargetBranch(),
-    //               TargetingComputer.getCurrentTargetLevel())
-    //           .pose);
-    // } else if (spot == spots.Level1) {
-    //   //do smth
-    // }
-    // poses.add(
-    //     getSpot(
-    //                 TargetingComputer.getCurrentTargetBranch(),
-    //                 TargetingComputer.getCurrentTargetLevel())
-    //             != null
-    //         ? getSpot(
-    //                 TargetingComputer.getCurrentTargetBranch(),
-    //                 TargetingComputer.getCurrentTargetLevel())
-    //             .pose
-    //         : new Pose3d());
-    // Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
+  public static void placeCoral(ElevatorPosition level, ReefPositions position) {
+    spots spot = getSpot(position, level);
+    if (spot != null && spot != spots.Level1) {
+      poses.add(getSpot(position, level).pose);
+    } else if (spot == spots.Level1) {
+      // do smth
+    }
+    Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
   }
 
   public static void tempCoral() {
@@ -69,7 +56,7 @@ public class SimCoral {
 
   public static Command intake(
       DoubleSupplier posex, DoubleSupplier posey, DoubleSupplier poserotation) {
-    return new Intake(posex, posey, poserotation);
+    return new Drop(posex, posey, poserotation);
   }
 
   public static enum spots {
@@ -410,175 +397,175 @@ public class SimCoral {
     }
   }
 
-  public static spots getSpot() { // (Targets target, Levels level) {
-    // if (target == Targets.ALPHA) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.A2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.A3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.A4;
-    //   }
-    // }
-    // if (target == Targets.BRAVO) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.B2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.B3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.B4;
-    //   }
-    // }
-    // if (target == Targets.CHARLIE) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.C2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.C3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.C4;
-    //   }
-    // }
-    // if (target == Targets.DELTA) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.D2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.D3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.D4;
-    //   }
-    // }
-    // if (target == Targets.ECHO) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.E2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.E3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.E4;
-    //   }
-    // }
-    // if (target == Targets.FOXTROT) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.F2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.F3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.F4;
-    //   }
-    // }
-    // if (target == Targets.GOLF) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.G2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.G3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.G4;
-    //   }
-    // }
-    // if (target == Targets.HOTEL) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.H2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.H3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.H4;
-    //   }
-    // }
-    // if (target == Targets.INDIA) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.I2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.I3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.I4;
-    //   }
-    // }
-    // if (target == Targets.JULIET) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.J2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.J3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.J4;
-    //   }
-    // }
-    // if (target == Targets.KILO) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.K2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.K3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.K4;
-    //   }
-    // }
-    // if (target == Targets.LIMA) {
-    //   if (level == Levels.L1) {
-    //     return spots.Level1;
-    //   }
-    //   if (level == Levels.L2) {
-    //     return spots.L2;
-    //   }
-    //   if (level == Levels.L3) {
-    //     return spots.L3;
-    //   }
-    //   if (level == Levels.L4) {
-    //     return spots.L4;
-    //   }
-    // }
+  public static spots getSpot(ReefPositions target, ElevatorPosition level) {
+    if (target == ReefPositions.A) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.A2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.A3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.A4;
+      }
+    }
+    if (target == ReefPositions.B) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.B2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.B3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.B4;
+      }
+    }
+    if (target == ReefPositions.C) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.C2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.C3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.C4;
+      }
+    }
+    if (target == ReefPositions.D) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.D2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.D3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.D4;
+      }
+    }
+    if (target == ReefPositions.E) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.E2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.E3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.E4;
+      }
+    }
+    if (target == ReefPositions.F) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.F2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.F3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.F4;
+      }
+    }
+    if (target == ReefPositions.G) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.G2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.G3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.G4;
+      }
+    }
+    if (target == ReefPositions.H) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.H2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.H3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.H4;
+      }
+    }
+    if (target == ReefPositions.I) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.I2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.I3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.I4;
+      }
+    }
+    if (target == ReefPositions.J) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.J2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.J3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.J4;
+      }
+    }
+    if (target == ReefPositions.K) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.K2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.K3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.K4;
+      }
+    }
+    if (target == ReefPositions.L) {
+      if (level == ElevatorPosition.L1) {
+        return spots.Level1;
+      }
+      if (level == ElevatorPosition.L2) {
+        return spots.L2;
+      }
+      if (level == ElevatorPosition.L3) {
+        return spots.L3;
+      }
+      if (level == ElevatorPosition.L4) {
+        return spots.L4;
+      }
+    }
     return null;
   }
 }

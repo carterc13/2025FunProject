@@ -4,6 +4,7 @@ public class State {
   private static GamePieceStates gamePieceState = GamePieceStates.NONE;
   private static DriveStates driveState = DriveStates.IDLE;
   private static GameStates gameState = GameStates.TELEOP;
+  private static ReefPositions reefPosition = ReefPositions.A;
 
   public static enum GamePieceStates {
     NONE(),
@@ -28,6 +29,21 @@ public class State {
     ENDGAME();
   }
 
+  public static enum ReefPositions {
+    A(),
+    B(),
+    C(),
+    D(),
+    E(),
+    F(),
+    G(),
+    H(),
+    I(),
+    J(),
+    K(),
+    L();
+  }
+
   public static void setGamePieceState(GamePieceStates state) {
     gamePieceState = state;
   }
@@ -38,6 +54,10 @@ public class State {
 
   public static DriveStates getDriveState() {
     return driveState;
+  }
+
+  public static boolean isDriveIdle() {
+    return getDriveState() == DriveStates.IDLE;
   }
 
   public static void setGameState(GameStates state) {

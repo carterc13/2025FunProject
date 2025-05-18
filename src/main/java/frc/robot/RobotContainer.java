@@ -11,7 +11,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.DriveCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.State.DriveStates;
+import frc.robot.commands.DriveHandler;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -32,275 +34,224 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
+import frc.robot.utils.Drop;
 import frc.robot.utils.TunableController;
 import frc.robot.utils.TunableController.TunableControllerType;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
-        private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
-        private final TunableController joystick = new TunableController(0)
-                        .withControllerType(TunableControllerType.QUADRATIC);
+	private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
+	private final TunableController joystick = new TunableController(0)
+			.withControllerType(TunableControllerType.QUADRATIC);
 
-        private final LoggedDashboardChooser<Command> autoChooser;
+	private final LoggedDashboardChooser<Command> autoChooser;
 
-        public final Drive drivetrain;
-        
-        private final Vision vision;
-        private final Arm arm;
-        private final Intake intake;
-        private final Elevator elevator;
+	public final Drive drivetrain;
 
-        /* Setting up bindings for necessary control of the swerve drive platform */
-        private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-        private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+	private final Vision vision;
+	private final Arm arm;
+	private final Intake intake;
+	private final Elevator elevator;
 
-        public RobotContainer() {
-                DriveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
-                switch (Constants.currentMode) {
-                        case REAL:
-                                // Real robot, instantiate hardware IO implementations
-                                drivetrain = new Drive(currentDriveTrain);
-                                arm = new Arm(new ArmIOCTRE());
-                                intake = new Intake(new IntakeIOCTRE());
-                                elevator = new Elevator(new ElevatorIOCTRE());
+	/* Setting up bindings for necessary control of the swerve drive platform */
+	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+	private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-                                vision = new Vision(
-                                                drivetrain::addVisionData,
-                                                new VisionIOPhotonVision(
-                                                                "FrontLeft",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                Units.inchesToMeters(
-                                                                                                                10.066),
-                                                                                                Units.inchesToMeters(
-                                                                                                                11.959),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                330)) // IN
-                                                                                                                      // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters),
-                                                new VisionIOPhotonVision(
-                                                                "FrontRight",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                Units.inchesToMeters(
-                                                                                                                10.066),
-                                                                                                -Units.inchesToMeters(
-                                                                                                                11.959),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                30)) // IN
-                                                                                                                     // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters),
-                                                new VisionIOPhotonVision(
-                                                                "BackLeft",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                -Units.inchesToMeters(
-                                                                                                                9.896),
-                                                                                                Units.inchesToMeters(
-                                                                                                                10.938),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                150)) // IN
-                                                                                                                      // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters),
-                                                new VisionIOPhotonVision(
-                                                                "BackRight",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                -Units.inchesToMeters(
-                                                                                                                9.896),
-                                                                                                -Units.inchesToMeters(
-                                                                                                                10.938),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                210)) // IN
-                                                                                                                      // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters));
-                                break;
+	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+			.withDeadband(MaxSpeed.times(0.1))
+			.withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
+			.withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-                        case SIM:
-                                // Sim robot, instantiate physics sim IO implementations
-                                drivetrain = new Drive(currentDriveTrain);
-                                ArmIOSIM temp = new ArmIOSIM();
-                                elevator = new Elevator(new ElevatorIOSIM(temp.getMechanismRoot()));
-                                arm = new Arm(temp);
-                                intake = new Intake(new IntakeIOSIM());
+	public RobotContainer() {
+		DriveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
+		switch (Constants.currentMode) {
+			case REAL:
+				// Real robot, instantiate hardware IO implementations
+				drivetrain = new Drive(currentDriveTrain);
+				arm = new Arm(new ArmIOCTRE());
+				intake = new Intake(new IntakeIOCTRE());
+				elevator = new Elevator(new ElevatorIOCTRE());
 
-                                vision = new Vision(
-                                                drivetrain::addVisionData,
-                                                new VisionIOPhotonVisionSIM(
-                                                                "FrontLeft",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                Units.inchesToMeters(
-                                                                                                                10.066),
-                                                                                                Units.inchesToMeters(
-                                                                                                                11.959),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                330)) // IN
-                                                                                                                      // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters),
-                                                new VisionIOPhotonVisionSIM(
-                                                                "FrontRight",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                Units.inchesToMeters(
-                                                                                                                10.066),
-                                                                                                -Units.inchesToMeters(
-                                                                                                                11.959),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                30)) // IN
-                                                                                                                     // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters),
-                                                new VisionIOPhotonVisionSIM(
-                                                                "BackLeft",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                -Units.inchesToMeters(
-                                                                                                                9.896),
-                                                                                                Units.inchesToMeters(
-                                                                                                                10.938),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                150)) // IN
-                                                                                                                      // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters),
-                                                new VisionIOPhotonVisionSIM(
-                                                                "BackRight",
-                                                                new Transform3d(
-                                                                                new Translation3d(
-                                                                                                -Units.inchesToMeters(
-                                                                                                                9.896),
-                                                                                                -Units.inchesToMeters(
-                                                                                                                10.938),
-                                                                                                Units.inchesToMeters(
-                                                                                                                8.55647482)), // IN
-                                                                                                                              // METERS
-                                                                                new Rotation3d(
-                                                                                                0,
-                                                                                                Units.degreesToRadians(
-                                                                                                                -25.16683805),
-                                                                                                Units.degreesToRadians(
-                                                                                                                210)) // IN
-                                                                                                                      // RADIANS
-                                                                ),
-                                                                drivetrain::getVisionParameters));
+				vision = new Vision(
+						drivetrain::addVisionData,
+						new VisionIOPhotonVision(
+								"FrontLeft",
+								new Transform3d(
+										new Translation3d(
+												Units.inchesToMeters(10.066),
+												Units.inchesToMeters(11.959),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(330)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters),
+						new VisionIOPhotonVision(
+								"FrontRight",
+								new Transform3d(
+										new Translation3d(
+												Units.inchesToMeters(10.066),
+												-Units.inchesToMeters(11.959),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(30)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters),
+						new VisionIOPhotonVision(
+								"BackLeft",
+								new Transform3d(
+										new Translation3d(
+												-Units.inchesToMeters(9.896),
+												Units.inchesToMeters(10.938),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(150)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters),
+						new VisionIOPhotonVision(
+								"BackRight",
+								new Transform3d(
+										new Translation3d(
+												-Units.inchesToMeters(9.896),
+												-Units.inchesToMeters(10.938),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(210)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters));
+				break;
 
-                                break;
+			case SIM:
+				// Sim robot, instantiate physics sim IO implementations
+				drivetrain = new Drive(currentDriveTrain);
+				ArmIOSIM temp = new ArmIOSIM();
+				elevator = new Elevator(new ElevatorIOSIM(temp.getMechanismRoot()));
+				arm = new Arm(temp);
+				intake = new Intake(new IntakeIOSIM());
 
-                        default:
-                                // Replayed robot, disable IO implementations
-                                drivetrain = new Drive(new DriveIO() {
-                                });
-                                arm = new Arm(new ArmIO() {
-                                });
-                                intake = new Intake(new IntakeIO() {
-                                });
-                                elevator = new Elevator(new ElevatorIO() {
-                                });
+				vision = new Vision(
+						drivetrain::addVisionData,
+						new VisionIOPhotonVisionSIM(
+								"FrontLeft",
+								new Transform3d(
+										new Translation3d(
+												Units.inchesToMeters(10.066),
+												Units.inchesToMeters(11.959),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(330)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters),
+						new VisionIOPhotonVisionSIM(
+								"FrontRight",
+								new Transform3d(
+										new Translation3d(
+												Units.inchesToMeters(10.066),
+												-Units.inchesToMeters(11.959),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(30)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters),
+						new VisionIOPhotonVisionSIM(
+								"BackLeft",
+								new Transform3d(
+										new Translation3d(
+												-Units.inchesToMeters(9.896),
+												Units.inchesToMeters(10.938),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(150)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters),
+						new VisionIOPhotonVisionSIM(
+								"BackRight",
+								new Transform3d(
+										new Translation3d(
+												-Units.inchesToMeters(9.896),
+												-Units.inchesToMeters(10.938),
+												Units.inchesToMeters(8.55647482)), // IN
+										// METERS
+										new Rotation3d(
+												0,
+												Units.degreesToRadians(-25.16683805),
+												Units.degreesToRadians(210)) // IN
+								// RADIANS
+								),
+								drivetrain::getVisionParameters));
 
-                                vision = new Vision(
-                                                drivetrain::addVisionData,
-                                                new VisionIO() {
-                                                },
-                                                new VisionIO() {
-                                                },
-                                                new VisionIO() {
-                                                },
-                                                new VisionIO() {
-                                                });
-                                break;
-                }
+				break;
 
-                // Set up auto routines
-                autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+			default:
+				// Replayed robot, disable IO implementations
+				drivetrain = new Drive(new DriveIO() {
+				});
+				arm = new Arm(new ArmIO() {
+				});
+				intake = new Intake(new IntakeIO() {
+				});
+				elevator = new Elevator(new ElevatorIO() {
+				});
 
-                configureBindings();
-        }
+				vision = new Vision(
+						drivetrain::addVisionData,
+						new VisionIO() {
+						},
+						new VisionIO() {
+						},
+						new VisionIO() {
+						},
+						new VisionIO() {
+						});
+				break;
+		}
 
-        private void configureBindings() {
-                // Note that X is defined as forward according to WPILib convention,
-                // and Y is defined as to the left according to WPILib convention.
-                drivetrain.setDefaultCommand(
-                                // Drivetrain will execute this command periodically
-                                new DriveCommand(drivetrain, () -> -joystick
-                                                .customLeft()
-                                                .getX(), () -> -joystick.customLeft().getY(),
-                                                () -> -joystick
-                                                                .customRight()
-                                                                .getX()));
+		// Set up auto routines
+		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-                joystick.back().onTrue(Commands.runOnce(() -> drivetrain.resetPose(Pose2d.kZero)));
+		configureBindings();
+	}
 
-                // joystick.a().onTrue(new IntakeCoral(arm, intake));
+	private void configureBindings() {
+		drivetrain.setDefaultCommand(
+				new DriveHandler(drivetrain, () -> -joystick.customLeft().getY(),
+						() -> -joystick.customLeft().getX(), () -> -joystick.customRight().getX()));
 
-                
+		joystick.back().onTrue(Commands.runOnce(() -> drivetrain.resetPose(Pose2d.kZero)));
 
-                joystick.a().onTrue(elevator.L1());
-                joystick.b().onTrue(elevator.L2());
-                joystick.x().onTrue(elevator.L3());
-                joystick.y().onTrue(elevator.L4());
+		// joystick.a().onTrue(new IntakeCoral(arm, intake));
 
-                joystick.a().onTrue(arm.L1());
-                joystick.b().onTrue(arm.L2());
-                joystick.x().onTrue(arm.L3());
-                joystick.y().onTrue(arm.L4());
-        }
+		joystick.a().onTrue(new Drop(() -> drivetrain.getPose().getX(), () -> drivetrain.getPose().getY(), () -> drivetrain.getPose().getRotation().getRadians()));
+	}
 
-        public Command getAutonomousCommand() {
-                return autoChooser.get();
-        }
+	public Command getAutonomousCommand() {
+		return autoChooser.get();
+	}
 }

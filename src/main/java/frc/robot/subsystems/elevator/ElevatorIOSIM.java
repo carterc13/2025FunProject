@@ -77,8 +77,6 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
     inputs.distance = Meters.of(m_elevatorSim.getPositionMeters());
 
     inputs.setpoint = Inches.of(setpoint);
-
-    SimCoral.tempCoral();
   }
 
   @Override
