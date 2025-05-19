@@ -46,9 +46,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.State;
 import frc.robot.subsystems.drive.requests.SysIdSwerveTranslation_Torque;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
 import frc.robot.utils.ArrayBuilder;
+import frc.robot.utils.PoseComputer;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -313,6 +315,8 @@ public class Drive extends SubsystemBase {
               });
     }
     updateWithTime();
+
+    State.setRightSource(PoseComputer.isRightSource(inputs.pose.getY()));
 
     m_field.setRobotPose(getPose());
     SmartDashboard.putData("field", m_field);

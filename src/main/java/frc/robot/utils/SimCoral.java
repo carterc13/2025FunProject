@@ -4,16 +4,15 @@
 
 package frc.robot.utils;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.State;
 import frc.robot.State.ReefPositions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPosition;
 import java.util.ArrayList;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
@@ -22,6 +21,7 @@ public class SimCoral {
 
   public static void start() {
     PoseComputer.setRedAlliance();
+    State.setRedAlliance();
     poses.add(new Pose3d());
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
   }
@@ -39,6 +39,7 @@ public class SimCoral {
       // do smth
     }
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
+    Drop().schedule();
   }
 
   public static void tempCoral() {
@@ -54,337 +55,372 @@ public class SimCoral {
                 Units.degreesToRadians(SmartDashboard.getNumber("Coral/yaw", 0)))));
   }
 
-  public static Command intake(
-      DoubleSupplier posex, DoubleSupplier posey, DoubleSupplier poserotation) {
-    return new Drop(posex, posey, poserotation);
+  public static Command Drop() {
+    return new Drop();
   }
 
   public static enum spots {
     Level1(),
     A2(
-        new Pose3d(
-            3.78,
-            4.189,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(0.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.78,
+                4.189,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(0.0))))),
     B2(
-        new Pose3d(
-            3.78,
-            3.8625,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(0.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.78,
+                3.8625,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(0.0))))),
     C2(
-        new Pose3d(
-            3.99,
-            3.49,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(60.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.99,
+                3.49,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(60.0))))),
     D2(
-        new Pose3d(
-            4.275,
-            3.325,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(60.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.275,
+                3.325,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(60.0))))),
     E2(
-        new Pose3d(
-            4.705,
-            3.325,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(120.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.705,
+                3.325,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(120.0))))),
     F2(
-        new Pose3d(
-            4.99,
-            3.49,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(120.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.99,
+                3.49,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(120.0))))),
     G2(
-        new Pose3d(
-            5.2,
-            3.8625,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(180.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.2,
+                3.8625,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(180.0))))),
     H2(
-        new Pose3d(
-            5.2,
-            4.189,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(180.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.2,
+                4.189,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(180.0))))),
     I2(
-        new Pose3d(
-            4.99,
-            4.56,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(240.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.99,
+                4.56,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(240.0))))),
     J2(
-        new Pose3d(
-            4.705,
-            4.73,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(240.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.705,
+                4.73,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(240.0))))),
     K2(
-        new Pose3d(
-            4.275,
-            4.73,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(300.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.275,
+                4.73,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(300.0))))),
     L2(
-        new Pose3d(
-            3.99,
-            4.56,
-            0.725,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(300.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.99,
+                4.56,
+                0.725,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(300.0))))),
     A3(
-        new Pose3d(
-            3.78,
-            4.189,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(0.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.78,
+                4.189,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(0.0))))),
     B3(
-        new Pose3d(
-            3.78,
-            3.8625,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(0.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.78,
+                3.8625,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(0.0))))),
     C3(
-        new Pose3d(
-            3.99,
-            3.49,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(60.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.99,
+                3.49,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(60.0))))),
     D3(
-        new Pose3d(
-            4.275,
-            3.325,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(60.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.275,
+                3.325,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(60.0))))),
     E3(
-        new Pose3d(
-            4.705,
-            3.325,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(120.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.705,
+                3.325,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(120.0))))),
     F3(
-        new Pose3d(
-            4.99,
-            3.49,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(120.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.99,
+                3.49,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(120.0))))),
     G3(
-        new Pose3d(
-            5.2,
-            3.8625,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(180.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.2,
+                3.8625,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(180.0))))),
     H3(
-        new Pose3d(
-            5.2,
-            4.189,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(180.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.2,
+                4.189,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(180.0))))),
     I3(
-        new Pose3d(
-            4.99,
-            4.56,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(240.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.99,
+                4.56,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(240.0))))),
     J3(
-        new Pose3d(
-            4.705,
-            4.73,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(240.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.705,
+                4.73,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(240.0))))),
     K3(
-        new Pose3d(
-            4.275,
-            4.73,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(300.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.275,
+                4.73,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(300.0))))),
     L3(
-        new Pose3d(
-            3.99,
-            4.56,
-            1.125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(30.0),
-                Units.degreesToRadians(300.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.99,
+                4.56,
+                1.125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(30.0),
+                    Units.degreesToRadians(300.0))))),
     A4(
-        new Pose3d(
-            3.71,
-            4.198,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(0.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.71,
+                4.198,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(0.0))))),
     B4(
-        new Pose3d(
-            3.71,
-            3.8625,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(0.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.71,
+                3.8625,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(0.0))))),
     C4(
-        new Pose3d(
-            3.96,
-            3.435,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(60.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.96,
+                3.435,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(60.0))))),
     D4(
-        new Pose3d(
-            4.245,
-            3.2775,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(60.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.245,
+                3.2775,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(60.0))))),
     E4(
-        new Pose3d(
-            4.725,
-            3.2775,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(120.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.725,
+                3.2775,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(120.0))))),
     F4(
-        new Pose3d(
-            5.022,
-            3.435,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(120.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.022,
+                3.435,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(120.0))))),
     G4(
-        new Pose3d(
-            5.265,
-            3.8625,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(180.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.265,
+                3.8625,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(180.0))))),
     H4(
-        new Pose3d(
-            5.265,
-            4.189,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(180.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.265,
+                4.189,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(180.0))))),
     I4(
-        new Pose3d(
-            5.022,
-            4.625,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(240.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                5.022,
+                4.625,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(240.0))))),
     J4(
-        new Pose3d(
-            4.7325,
-            4.785,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(240.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.7325,
+                4.785,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(240.0))))),
     K4(
-        new Pose3d(
-            4.245,
-            4.785,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(300.0)))),
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                4.245,
+                4.785,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(300.0))))),
     L4(
-        new Pose3d(
-            3.96,
-            4.625,
-            1.7125,
-            new Rotation3d(
-                Units.degreesToRadians(0.0),
-                Units.degreesToRadians(75.0),
-                Units.degreesToRadians(300.0))));
+        AllianceFlipUtil.apply(
+            new Pose3d(
+                3.96,
+                4.625,
+                1.7125,
+                new Rotation3d(
+                    Units.degreesToRadians(0.0),
+                    Units.degreesToRadians(75.0),
+                    Units.degreesToRadians(300.0)))));
 
     private final Pose3d pose;
 

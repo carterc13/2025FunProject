@@ -6,7 +6,6 @@ package frc.robot.utils;
 
 import static edu.wpi.first.units.Units.Meters;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -26,9 +25,9 @@ public class PoseComputer {
     }
   }
 
-  public static boolean isRightSource(Pose2d pose) {
+  public static boolean isRightSource(double y) {
     return redalliance
-        ? pose.getY() > FieldConstants.fieldWidth.in(Meters) / 2
-        : pose.getY() < FieldConstants.fieldWidth.in(Meters) / 2;
+        ? y > FieldConstants.fieldWidth.in(Meters) / 2
+        : y < FieldConstants.fieldWidth.in(Meters) / 2;
   }
 }
