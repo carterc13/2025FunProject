@@ -5,30 +5,28 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.State;
-import frc.robot.State.GamePieceStates;
-import frc.robot.State.ReefPositions;
+import frc.robot.subsystems.drive.Drive.ReefPositions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPosition;
 import frc.robot.utils.SimCoral;
+import java.util.function.BooleanSupplier;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class PlaceCoral extends Command {
   ElevatorPosition level;
   ReefPositions position;
+  BooleanSupplier isRightSource;
   /** Creates a new PlaceCoral. */
-  public PlaceCoral(ElevatorPosition level, ReefPositions position) {
+  public PlaceCoral(ElevatorPosition level, ReefPositions position, BooleanSupplier isRightSource) {
     this.level = level;
     this.position = position;
+    this.isRightSource = isRightSource;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    if (State.getGamePieceState() == GamePieceStates.CORAL) {
-      SimCoral.placeCoral(level, position);
-      SimCoral.Drop().schedule();
-      State.setGamePieceState(GamePieceStates.NONE);
-    }
+    SimCoral.placeCoral(level, position);
+    SimCoral.Drop(isRightSource).schedule();
   }
 
   // Called every time the scheduler runs while the command is scheduled.

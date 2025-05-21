@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-import frc.robot.State;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -77,10 +76,6 @@ public class ArmIOSIM extends ArmIOCTRE {
     SmartDashboard.putNumber("Arm Angle", inputs.angle.in(Degrees));
 
     Logger.recordOutput("Arm3", m_mech2d);
-
-    Logger.recordOutput(
-        "Current Target Pose",
-        State.getReefPosition().getPose(State.getTagForTarget(State.getReefPosition())));
   }
 
   @Override

@@ -24,14 +24,19 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
@@ -41,16 +46,18 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
-import frc.robot.State;
 import frc.robot.subsystems.drive.requests.SysIdSwerveTranslation_Torque;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
+import frc.robot.utils.AllianceFlipUtil;
 import frc.robot.utils.ArrayBuilder;
-import frc.robot.utils.PoseComputer;
+import frc.robot.utils.FieldConstants;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -232,7 +239,7 @@ public class Drive extends SubsystemBase {
    * @return Command to run
    */
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-    return run(() -> io.setControl(requestSupplier.get()));
+    return runOnce(() -> io.setControl(requestSupplier.get()));
   }
 
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
@@ -316,10 +323,10 @@ public class Drive extends SubsystemBase {
     }
     updateWithTime();
 
-    State.setRightSource(PoseComputer.isRightSource(inputs.pose.getY()));
-
     m_field.setRobotPose(getPose());
     SmartDashboard.putData("field", m_field);
+
+    Logger.recordOutput("Reef Alignment", getReefPosition().getPose());
   }
 
   public void resetPose(Pose2d pose) {
@@ -494,6 +501,162 @@ public class Drive extends SubsystemBase {
     for (int moduleIndex = 0; moduleIndex < currentPositions.length; moduleIndex++) {
       currentPositions[moduleIndex].distanceMeters = inputs.drivePositions[moduleIndex][timeIndex];
       currentPositions[moduleIndex].angle = inputs.steerPositions[moduleIndex][timeIndex];
+    }
+  }
+
+  // ----------------------If anyone is reading this, it wasn't me :wink:----------------------\\
+
+  private DriveStates driveState = DriveStates.IDLE;
+  private ReefPositions reefPosition = ReefPositions.A;
+  private boolean isRightSource = false;
+  private Pose3d nextCoralPose = new Pose3d();
+  private ArrayList<AllReefLocations> history = new ArrayList<>();
+
+  public enum DriveStates {
+    IDLE(),
+    ALIGNREEF(),
+    AUTOTOCORAL(),
+    AUTOTOREEF(),
+    AUTOINTAKE(),
+    INTAKEALGAE(),
+    REEFTOBARGE();
+  }
+
+  public enum AllReefLocations {
+    Level1(),
+    A2(),
+    B2(),
+    C2(),
+    D2(),
+    E2(),
+    F2(),
+    G2(),
+    H2(),
+    I2(),
+    J2(),
+    K2(),
+    L2(),
+    A3(),
+    B3(),
+    C3(),
+    D3(),
+    E3(),
+    F3(),
+    G3(),
+    H3(),
+    I3(),
+    J3(),
+    K3(),
+    L3(),
+    A4(),
+    B4(),
+    C4(),
+    D4(),
+    E4(),
+    F4(),
+    G4(),
+    H4(),
+    I4(),
+    J4(),
+    K4(),
+    L4();
+  }
+
+  public final Command setDriveToIDLE() {
+    return createDriveCommand(DriveStates.IDLE);
+  }
+
+  public final Command setDriveToALIGN() {
+    return createDriveCommand(DriveStates.ALIGNREEF);
+  }
+
+  public final Command createDriveCommand(DriveStates state) {
+    return Commands.runOnce(() -> setDriveState(state));
+  }
+
+  public void addToHistory(AllReefLocations location) {
+    history.add(location);
+  }
+
+  private void setDriveState(DriveStates state) {
+    driveState = state;
+    Logger.recordOutput("Drive State", driveState.toString());
+  }
+
+  @AutoLogOutput
+  public DriveStates getDriveState() {
+    return driveState;
+  }
+
+  public ReefPositions getReefPosition() {
+    return reefPosition;
+  }
+
+  public void setReefPosition(ReefPositions newPosition) {
+    reefPosition = newPosition;
+  }
+
+  public boolean isRightSource() {
+    return isRightSource;
+  }
+
+  public void setRightSource(boolean is) {
+    isRightSource = is;
+  }
+
+  public void setNextCoralPose(Pose3d pose) {
+    nextCoralPose = pose;
+  }
+
+  public Pose3d getNextCoralPose() {
+    return nextCoralPose;
+  }
+
+  private static final double xOffset = 24;
+  private static final double yOffset = 7;
+
+  public enum ReefPositions {
+    A(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
+    B(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
+    C(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
+    D(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
+    E(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
+    F(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
+    G(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
+    H(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
+    I(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
+    J(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
+    K(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
+    L(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)));
+
+    Translation2d translation;
+
+    ReefPositions(Translation2d translation) {
+      this.translation = translation;
+    }
+
+    public Transform3d getPose() {
+      return new Transform3d(
+              FieldConstants.aprilTags.getTagPose(getTagForTarget(this)).get().getTranslation(),
+              FieldConstants.aprilTags.getTagPose(getTagForTarget(this)).get().getRotation())
+          .plus(
+              new Transform3d(
+                  new Translation3d(
+                      this.translation.getX(),
+                      this.translation.getY(),
+                      -FieldConstants.aprilTags.getTagPose(getTagForTarget(this)).get().getZ()),
+                  new Rotation3d(0, 0, -Math.PI)));
+    }
+
+    public int getTagForTarget(ReefPositions target) {
+      return switch (target) {
+        case A, B -> AllianceFlipUtil.shouldFlip() ? 7 : 18;
+        case C, D -> AllianceFlipUtil.shouldFlip() ? 8 : 17;
+        case E, F -> AllianceFlipUtil.shouldFlip() ? 9 : 22;
+        case G, H -> AllianceFlipUtil.shouldFlip() ? 10 : 21;
+        case I, J -> AllianceFlipUtil.shouldFlip() ? 11 : 20;
+        case K, L -> AllianceFlipUtil.shouldFlip() ? 6 : 19;
+      };
     }
   }
 }

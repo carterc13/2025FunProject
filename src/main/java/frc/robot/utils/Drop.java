@@ -9,8 +9,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.State;
 import java.util.Random;
+import java.util.function.BooleanSupplier;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class Drop extends Command {
@@ -21,8 +21,10 @@ public class Drop extends Command {
   private double duration;
   private Timer timer = new Timer();
   private static Random random = new Random();
+  private BooleanSupplier isRightSource;
 
-  public Drop() {
+  public Drop(BooleanSupplier isRightSource) {
+    this.isRightSource = isRightSource;
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -33,24 +35,23 @@ public class Drop extends Command {
         AllianceFlipUtil.apply(
             new Pose3d(
                 0.75,
-                State.isRightSource() ? 0.5 : 7.57,
+                isRightSource.getAsBoolean() ? 0.5 : 7.57,
                 1.15,
                 new Rotation3d(
                     Units.degreesToRadians(0),
                     Units.degreesToRadians(35),
-                    Units.degreesToRadians(State.isRightSource() ? 55 : -55))));
+                    Units.degreesToRadians(isRightSource.getAsBoolean() ? 55 : -55))));
     endPose =
         AllianceFlipUtil.apply(
             new Pose3d(
                 random.nextDouble(1, 2.25),
-                State.isRightSource() ? random.nextDouble(1, 3) : random.nextDouble(5, 7),
+                isRightSource.getAsBoolean() ? random.nextDouble(1, 3) : random.nextDouble(5, 7),
                 0.0,
                 new Rotation3d(
                     Units.degreesToRadians(0),
                     Units.degreesToRadians(0),
                     Units.degreesToRadians(random.nextDouble(0, 360)))));
     duration = startPose.getTranslation().getDistance(endPose.getTranslation()) / 16;
-    State.setNextCoralPose(endPose);
     timer.restart();
   }
 

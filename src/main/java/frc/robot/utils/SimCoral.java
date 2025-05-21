@@ -9,10 +9,10 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.State;
-import frc.robot.State.ReefPositions;
+import frc.robot.subsystems.drive.Drive.ReefPositions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPosition;
 import java.util.ArrayList;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
@@ -21,7 +21,6 @@ public class SimCoral {
 
   public static void start() {
     PoseComputer.setRedAlliance();
-    State.setRedAlliance();
     poses.add(new Pose3d());
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
   }
@@ -39,7 +38,6 @@ public class SimCoral {
       // do smth
     }
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
-    Drop().schedule();
   }
 
   public static void tempCoral() {
@@ -55,8 +53,8 @@ public class SimCoral {
                 Units.degreesToRadians(SmartDashboard.getNumber("Coral/yaw", 0)))));
   }
 
-  public static Command Drop() {
-    return new Drop();
+  public static Command Drop(BooleanSupplier isRightSource) {
+    return new Drop(isRightSource);
   }
 
   public static enum spots {

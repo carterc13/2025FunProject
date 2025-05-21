@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 /** Add your docs here. */
 public class PoseComputer {
@@ -25,9 +26,9 @@ public class PoseComputer {
     }
   }
 
-  public static boolean isRightSource(double y) {
+  public static boolean isRightSource(DoubleSupplier y) {
     return redalliance
-        ? y > FieldConstants.fieldWidth.in(Meters) / 2
-        : y < FieldConstants.fieldWidth.in(Meters) / 2;
+        ? y.getAsDouble() > FieldConstants.fieldWidth.in(Meters) / 2
+        : y.getAsDouble() < FieldConstants.fieldWidth.in(Meters) / 2;
   }
 }

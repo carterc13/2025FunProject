@@ -11,9 +11,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.State.DriveStates;
-import frc.robot.State.ReefPositions;
 import frc.robot.commands.DriveHandler;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
@@ -245,14 +242,8 @@ public class RobotContainer {
 
     joystick.back().onTrue(Commands.runOnce(() -> drivetrain.resetPose(Pose2d.kZero)));
 
-    // joystick.a().onTrue(new IntakeCoral(arm, intake));
-    joystick.a().onTrue(new InstantCommand(() -> State.setDriveState(DriveStates.ALIGNREEF)));
-    joystick.a().onFalse(new InstantCommand(() -> State.setDriveState(DriveStates.IDLE)));
-    // joystick.a().onTrue(arm.L2());
-    // joystick.a().onTrue(new InstantCommand(() -> State.setReefPosition(ReefPositions.A)));
-    // joystick.b().onTrue(new InstantCommand(() -> State.setReefPosition(ReefPositions.B)));
-    // joystick.x().onTrue(new InstantCommand(() -> State.setReefPosition(ReefPositions.C)));
-    // joystick.y().onTrue(new InstantCommand(() -> State.setReefPosition(ReefPositions.D)));
+    joystick.pov(0).onTrue(drivetrain.setDriveToALIGN());
+    joystick.pov(0).onFalse(drivetrain.setDriveToIDLE());
   }
 
   public Command getAutonomousCommand() {
