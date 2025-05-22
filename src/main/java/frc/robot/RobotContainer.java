@@ -4,6 +4,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -244,6 +245,24 @@ public class RobotContainer {
 
     joystick.pov(0).onTrue(drivetrain.setDriveToALIGN());
     joystick.pov(0).onFalse(drivetrain.setDriveToIDLE());
+
+    joystick.a().whileTrue(drivetrain.pathfindToPose(() -> new Pose2d(0, 0, new Rotation2d(0))));
+
+    // joystick
+    //         .a()
+    //         .onTrue(
+    //                 AutoBuilder.pathfindThenFollowPath(
+    //                         new PathPlannerPath(
+    //                                 PathPlannerPath.waypointsFromPoses(
+    //                                         new Pose2d[] {
+    //                                                 drivetrain.getPose(),
+    //                                                 new Pose2d(10, 5,
+    // drivetrain.getPose().getRotation())
+    //                                         }),
+    //                                 constraints,
+    //                                 null,
+    //                                 new GoalEndState(0, Rotation2d.fromDegrees(0))),
+    //                         constraints));
   }
 
   public Command getAutonomousCommand() {
