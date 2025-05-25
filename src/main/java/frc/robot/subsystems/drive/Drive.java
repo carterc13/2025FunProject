@@ -257,28 +257,20 @@ public class Drive extends SubsystemBase {
         () ->
             AutoBuilder.followPath(
                 Pathfinding.getCurrentPath(
-                    new PathConstraints(
-                        MetersPerSecond.of(1000),
-                        MetersPerSecondPerSecond.of(1000),
-                        DegreesPerSecond.of(540),
-                        DegreesPerSecondPerSecond.of(1090)),
-                    new GoalEndState(MetersPerSecond.of(5), poseSupplier.get()))),
+                    new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
+                    new GoalEndState(MetersPerSecond.of(1), poseSupplier.get()))),
         Set.of(this));
   }
 
-  public Command pathfindToPose(Supplier<Pose2d> poseSupplier) {
-    return new DeferredCommand(
-        () ->
-            AutoBuilder.pathfindToPose(
-                poseSupplier.get(),
-                new PathConstraints(
-                    MetersPerSecond.of(1000),
-                    MetersPerSecondPerSecond.of(1000),
-                    DegreesPerSecond.of(540),
-                    DegreesPerSecondPerSecond.of(1090)),
-                MetersPerSecond.of(5)),
-        Set.of(this));
-  }
+  // public Command pathfindToPose(Supplier<Pose2d> poseSupplier) {
+  // return new DeferredCommand(
+  // () ->
+  // AutoBuilder.pathfindToPose(
+  // poseSupplier.get(),
+  // new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
+  // MetersPerSecond.of(1)),
+  // Set.of(this));
+  // }
 
   /**
    * Returns a command that applies the specified control request to this swerve

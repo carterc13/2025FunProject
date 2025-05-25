@@ -3,9 +3,7 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -14,6 +12,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.DriveHandler;
+import frc.robot.commands.PathFind;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -265,19 +264,19 @@ public class RobotContainer {
     //                                 new GoalEndState(0, Rotation2d.fromDegrees(0))),
     //                         constraints));
 
-    Pose2d targetPose = new Pose2d(10, 5, new Rotation2d(180));
+    // Pose2d targetPose = new Pose2d(10, 5, new Rotation2d(180));
 
-    // Create the constraints to use while pathfinding
-    PathConstraints constraints =
-        new PathConstraints(3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
+    // // Create the constraints to use while pathfinding
+    // PathConstraints constraints =
+    //     new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136));
 
-    // Since AutoBuilder is configured, we can use it to build pathfinding commands
-    Command pathfindingCommand =
-        AutoBuilder.pathfindToPose(
-            targetPose, constraints, 0.0 // Goal end velocity in meters/sec
-            );
+    // // Since AutoBuilder is configured, we can use it to build pathfinding commands
+    // Command pathfindingCommand =
+    //     AutoBuilder.pathfindToPose(
+    //         targetPose, constraints, 0.0 // Goal end velocity in meters/sec
+    //         );
 
-    joystick.a().whileTrue(pathfindingCommand);
+    joystick.a().whileTrue(new PathFind(drivetrain));
   }
 
   public Command getAutonomousCommand() {
