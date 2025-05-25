@@ -258,11 +258,11 @@ public class Drive extends SubsystemBase {
             AutoBuilder.followPath(
                 Pathfinding.getCurrentPath(
                     new PathConstraints(
-                        MetersPerSecond.of(5),
-                        MetersPerSecondPerSecond.of(7),
+                        MetersPerSecond.of(1000),
+                        MetersPerSecondPerSecond.of(1000),
                         DegreesPerSecond.of(540),
                         DegreesPerSecondPerSecond.of(1090)),
-                    new GoalEndState(MetersPerSecond.of(0), poseSupplier.get()))),
+                    new GoalEndState(MetersPerSecond.of(5), poseSupplier.get()))),
         Set.of(this));
   }
 
@@ -272,11 +272,11 @@ public class Drive extends SubsystemBase {
             AutoBuilder.pathfindToPose(
                 poseSupplier.get(),
                 new PathConstraints(
-                    MetersPerSecond.of(5),
-                    MetersPerSecondPerSecond.of(7),
+                    MetersPerSecond.of(1000),
+                    MetersPerSecondPerSecond.of(1000),
                     DegreesPerSecond.of(540),
                     DegreesPerSecondPerSecond.of(1090)),
-                MetersPerSecond.of(0)),
+                MetersPerSecond.of(5)),
         Set.of(this));
   }
 
@@ -287,7 +287,7 @@ public class Drive extends SubsystemBase {
    * @return Command to run
    */
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-    return runOnce(() -> io.setControl(requestSupplier.get()));
+    return run(() -> io.setControl(requestSupplier.get()));
   }
 
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")

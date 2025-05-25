@@ -14,14 +14,16 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.utils.AllianceFlipUtil;
+import java.util.Random;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class PathFind extends Command {
   PathConstraints constraints =
-      new PathConstraints(6, 10, Units.degreesToRadians(540), Units.degreesToRadians(1090));
+      new PathConstraints(1000, 1000, Units.degreesToRadians(540), Units.degreesToRadians(1090));
   GoalEndState end;
   Command currentcommand;
   Drive drivetrain;
+  private static Random random = new Random();
   /** Creates a new PathFind. */
   public PathFind(Drive drivetrain) {
     this.drivetrain = drivetrain;
@@ -35,11 +37,24 @@ public class PathFind extends Command {
         AllianceFlipUtil.apply(AutoBuilder.getCurrentPose().getTranslation()));
     Pathfinding.setGoalPosition(new Translation2d(10, 5));
     currentcommand = drivetrain.pathfinderToPose(() -> new Rotation2d(0));
+    currentcommand = drivetrain.pathfinderToPose(() -> new Rotation2d());
+    // random.nextDouble(0, 10),
+    // random.nextDouble(0, 10),
+    // new Rotation2d(random.nextDouble(0, 359.9), random.nextDouble(0, 359.9))));
+    currentcommand.schedule();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {}
+  public void execute() {
+    if (Pathfinding.isNewPathAvailable()) {
+      currentcommand.cancel();
+      currentcommand = drivetrain.pathfinderToPose(() -> new Rotation2d(0));
+      currentcommand.schedule();
+    }
+    // Logger.recordOutput("OMGPP", Pathfinding.getCurrentPath(constraints,
+    // end).getIdealStartingState().velocity());
+  }
 
   // Called once the command ends or is interrupted.
   @Override
@@ -50,6 +65,6 @@ public class PathFind extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return currentcommand.isFinished();
+    return false;
   }
 }
