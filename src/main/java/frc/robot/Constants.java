@@ -39,10 +39,10 @@ public final class Constants {
   public static final AngularVelocity MaxModuleRate = RotationsPerSecond.of(20.0);
 
   // PathPlanner config constants
-  private static final Mass ROBOT_MASS = Kilogram.of(69.78);
+  private static final Mass ROBOT_MASS = Kilogram.of(32.36);
   // 15.2
-  private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6.0);
-  private static final double WHEEL_COF = 1.9;
+  private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(9.265);
+  private static final double WHEEL_COF = 1.5;
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
@@ -70,7 +70,7 @@ public final class Constants {
               SWERVE_MODULE_CONSTANTS.WheelRadius,
               TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
               WHEEL_COF,
-              DCMotor.getKrakenX60Foc(1).withReduction(SWERVE_MODULE_CONSTANTS.DriveMotorGearRatio),
+              DCMotor.getKrakenX60(1).withReduction(SWERVE_MODULE_CONSTANTS.DriveMotorGearRatio),
               SWERVE_MODULE_CONSTANTS.SlipCurrent,
               1),
           SWERVE_MODULE_OFFSETS);
