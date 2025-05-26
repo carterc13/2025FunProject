@@ -276,7 +276,7 @@ public class RobotContainer {
     //         targetPose, constraints, 0.0 // Goal end velocity in meters/sec
     //         );
 
-    joystick.a().whileTrue(new PathFind(drivetrain));
+    joystick.a().onTrue(new PathFind(drivetrain));
   }
 
   public Command getAutonomousCommand() {

@@ -20,9 +20,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -50,7 +47,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -63,7 +59,6 @@ import frc.robot.utils.ArrayBuilder;
 import frc.robot.utils.FieldConstants;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -225,6 +220,11 @@ public class Drive extends SubsystemBase {
         (targetPose) -> {
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
+
+    SmartDashboard.putNumber("tempTransX1", 1);
+    SmartDashboard.putNumber("tempTransY1", 1);
+    SmartDashboard.putNumber("tempTransX2", 0);
+    SmartDashboard.putNumber("tempTransY2", 0);
   }
 
   private void configureAutoBuilder() {
@@ -252,15 +252,15 @@ public class Drive extends SubsystemBase {
         );
   }
 
-  public Command pathfinderToPose(Supplier<Rotation2d> poseSupplier) {
-    return new DeferredCommand(
-        () ->
-            AutoBuilder.followPath(
-                Pathfinding.getCurrentPath(
-                    new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
-                    new GoalEndState(MetersPerSecond.of(1), poseSupplier.get()))),
-        Set.of(this));
-  }
+  // public Command pathfinderToPose(Supplier<Rotation2d> poseSupplier) {
+  //   return new DeferredCommand(
+  //       () ->
+  //           AutoBuilder.followPath(
+  //               Pathfinding.getCurrentPath(
+  //                   new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
+  //                   new GoalEndState(MetersPerSecond.of(1), poseSupplier.get()))),
+  //       Set.of(this));
+  // }
 
   // public Command pathfindToPose(Supplier<Pose2d> poseSupplier) {
   // return new DeferredCommand(
