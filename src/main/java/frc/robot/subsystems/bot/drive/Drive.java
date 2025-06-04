@@ -279,7 +279,7 @@ public class Drive extends SubsystemBase {
    * @return Command to run
    */
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-    return run(() -> io.setControl(requestSupplier.get()));
+    return runOnce(() -> io.setControl(requestSupplier.get()));
   }
 
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
@@ -664,23 +664,42 @@ public class Drive extends SubsystemBase {
   private static final double yOffset = 7;
 
   public enum ReefPositions {
-    A(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
-    B(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
-    C(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
-    D(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
-    E(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
-    F(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
-    G(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
-    H(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
-    I(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
-    J(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset))),
-    K(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset))),
-    L(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)));
+    A(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset)), new Rotation2d(Units.degreesToRadians(0))),
+    B(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)), new Rotation2d(Units.degreesToRadians(0))),
+    C(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset)), new Rotation2d(Units.degreesToRadians(60))),
+    D(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)), new Rotation2d(Units.degreesToRadians(60))),
+    E(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset)), new Rotation2d(Units.degreesToRadians(120))),
+    F(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)), new Rotation2d(Units.degreesToRadians(120))),
+    G(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset)), new Rotation2d(Units.degreesToRadians(180))),
+    H(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)), new Rotation2d(Units.degreesToRadians(180))),
+    I(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset)), new Rotation2d(Units.degreesToRadians(240))),
+    J(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)), new Rotation2d(Units.degreesToRadians(240))),
+    K(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(-yOffset)), new Rotation2d(Units.degreesToRadians(300))),
+    L(new Translation2d(Units.inchesToMeters(xOffset), Units.inchesToMeters(yOffset)), new Rotation2d(Units.degreesToRadians(300)));
 
     Translation2d translation;
+    Rotation2d rotation;
 
-    ReefPositions(Translation2d translation) {
+    ReefPositions(Translation2d translation, Rotation2d rotation) {
       this.translation = translation;
+      this.rotation = rotation;
+    }
+
+    public Rotation2d getAngle() {
+      return rotation;
+    }
+
+    public Translation2d getPoseOffset() {
+      return new Transform3d(
+              FieldConstants.aprilTags.getTagPose(getTagForTarget(this)).get().getTranslation(),
+              FieldConstants.aprilTags.getTagPose(getTagForTarget(this)).get().getRotation())
+          .plus(
+              new Transform3d(
+                  new Translation3d(
+                      this.translation.getX(),
+                      this.translation.getY(),
+                      -FieldConstants.aprilTags.getTagPose(getTagForTarget(this)).get().getZ()),
+                  new Rotation3d(0, 0, -Math.PI))).getTranslation().toTranslation2d().plus(new Translation2d(Units.inchesToMeters(32), 0));
     }
 
     public Transform3d getPose() {

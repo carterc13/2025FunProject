@@ -22,7 +22,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.TimestampedDoubleArray;
-import frc.robot.subsystems.drive.Drive.VisionParameters;
+import frc.robot.subsystems.bot.drive.Drive.VisionParameters;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;

@@ -4,13 +4,14 @@
 
 package frc.robot.utils;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.drive.Drive.ReefPositions;
-import frc.robot.subsystems.elevator.Elevator.ElevatorPosition;
+import frc.robot.subsystems.bot.drive.Drive.ReefPositions;
+import frc.robot.subsystems.bot.elevator.Elevator.ElevatorPosition;
 import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -18,16 +19,28 @@ import org.littletonrobotics.junction.Logger;
 /** Add your docs here. */
 public class SimCoral {
   private static ArrayList<Pose3d> poses = new ArrayList<>();
+  private static Command tempCommand;
 
   public static void start() {
     PoseComputer.setRedAlliance();
     poses.add(new Pose3d());
+    poses.add(new Pose3d());
+    tempCommand = new Drop(() -> true).andThen(new Drop(() -> false));
+    tempCommand.schedule();
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
   }
 
   public static void setPose(int index, Pose3d pose) {
     poses.set(index, pose);
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
+  }
+
+  public static Pose2d getLeftPose() {
+    return poses.get(1).toPose2d();
+  }
+
+  public static Pose2d getRightPose() {
+    return poses.get(0).toPose2d();
   }
 
   public static void placeCoral(ElevatorPosition level, ReefPositions position) {

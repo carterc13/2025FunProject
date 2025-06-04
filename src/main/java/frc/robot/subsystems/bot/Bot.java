@@ -4,20 +4,28 @@
 
 package frc.robot.subsystems.bot;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.commands.botCommands.Align;
+import frc.robot.commands.botCommands.Place;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.bot.arm.Arm;
 import frc.robot.subsystems.bot.arm.ArmIOSIM;
@@ -29,6 +37,8 @@ import frc.robot.subsystems.bot.intake.Intake;
 import frc.robot.subsystems.bot.intake.IntakeIOSIM;
 import frc.robot.subsystems.bot.vision.Vision;
 import frc.robot.subsystems.bot.vision.VisionIOPhotonVisionSIM;
+import frc.robot.utils.AllianceFlipUtil;
+import frc.robot.utils.SimCoral;
 import frc.robot.utils.TunableController;
 import frc.robot.utils.TunableController.TunableControllerType;
 
@@ -49,14 +59,14 @@ public class Bot extends SubsystemBase {
   private final LoggedDashboardChooser<Command> autoChooser;
   private boolean tempDissabled = false;
   private final BotType botType;
-  private final BotDificulty botDificulty;
+  private final Memory memory;
   private States state;
+  private Command currentCommand;
 
-  public Bot(boolean testingBot, BotType type, BotDificulty dificulty) {
+  public Bot(boolean testingBot, BotType type) {
     botType = type;
-    botDificulty = dificulty;
     joystick = new TunableController(testingBot ? 0 : 1)
-    .withControllerType(TunableControllerType.QUADRATIC);
+        .withControllerType(TunableControllerType.QUADRATIC);
     autoChooser = new LoggedDashboardChooser<>("Bot Auto Choices", AutoBuilder.buildAutoChooser());
     DriveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
     drivetrain = new Drive(currentDriveTrain);
@@ -127,25 +137,83 @@ public class Bot extends SubsystemBase {
             // RADIANS
             ),
             drivetrain::getVisionParameters));
+
+    memory = new Memory(botType);
+    memory.updateNextBest(drivetrain.getPose());
+    elevator.IDLE().schedule();
+    intake.STOW().schedule();
+    arm.CORALIDLE().schedule();
+    drivetrain.setDefaultCommand(drivetrain
+        .applyRequest(
+            () -> drive
+                .withVelocityX(MaxSpeed.times(joystick.getLeftY()))
+                .withVelocityY(MaxSpeed.times(joystick.getLeftX()))
+                .withRotationalRate(Constants.MaxAngularRate.times(joystick.getRightX()))));
   }
 
   @Override
   public void periodic() {
-    if (!tempDissabled) {
-
+    if (currentCommand.isFinished()) {
+      switch (state) {
+        case TOREEF:
+          state = States.ALIGN;
+          currentCommand = new Align(drivetrain, arm, elevator, intake, memory);
+          break;
+        case ALIGN:
+        state = States.PLACE;
+          currentCommand = new Place(drivetrain, arm, elevator, intake, memory);
+          break;
+          case PLACE:
+          state = States.TOINTAKE;
+            currentCommand = newAutoToIntake();
+            break;
+            case TOINTAKE:
+            state = States.AUTOINTAKE;
+              //currentCommand = new AutoIntake(drivetrain, arm, elevator, intake, memory);///////////////////////////////////////////////
+              break;
+              case AUTOINTAKE:
+        state = States.TOREEF;
+          currentCommand = newAutoToReef();
+          break;
+        default:
+          break;
+      }
+      currentCommand.schedule();
+    } else {
+      switch (state) {
+        case TOREEF:
+          if (Pathfinding.isNewPathAvailable()) {
+            currentCommand.cancel();
+            currentCommand = newAutoToReef();
+            currentCommand.schedule();
+          }
+          break;
+        default:
+          break;
+      }
     }
   }
 
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
+  private Command newAutoToIntake() {
+    Pathfinding.setStartPosition(
+        AllianceFlipUtil.apply(AutoBuilder.getCurrentPose().getTranslation()));
+    Pathfinding.setGoalPosition(SimCoral.getLeftPose().getTranslation().getDistance(AutoBuilder.getCurrentPose().getTranslation()) > SimCoral.getRightPose().getTranslation().getDistance(AutoBuilder.getCurrentPose().getTranslation()) ? SimCoral.getRightPose().getTranslation().plus(new Translation2d(Units.inchesToMeters(5), Units.inchesToMeters(0))) : SimCoral.getLeftPose().getTranslation().plus(new Translation2d(Units.inchesToMeters(5), Units.inchesToMeters(0))));
+    return 
+        AutoBuilder.followPath(
+            Pathfinding.getCurrentPath(
+                new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
+                new GoalEndState(MetersPerSecond.of(0.5), drivetrain.getReefPosition().getAngle())));
   }
 
-  public void dissableBotTemp() {
-    tempDissabled = true;
-  }
-
-  public void undissableBotTemp() {
-    tempDissabled = false;
+  private Command newAutoToReef() {
+    Pathfinding.setStartPosition(
+        AllianceFlipUtil.apply(AutoBuilder.getCurrentPose().getTranslation()));
+    Pathfinding.setGoalPosition(drivetrain.getReefPosition().getPoseOffset());
+    return 
+        AutoBuilder.followPath(
+            Pathfinding.getCurrentPath(
+                new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
+                new GoalEndState(MetersPerSecond.of(0.5), drivetrain.getReefPosition().getAngle())));
   }
 
   public enum BotType {
@@ -154,14 +222,7 @@ public class Bot extends SubsystemBase {
     RP()
   }
 
-  public enum BotDificulty {
-    LIGHT(),
-    FRIGHTENED(),
-    AGRESSIVE()
-  }
-
   private enum States {
-    INTAKE(),
     TOREEF(),
     ALIGN(),
     PLACE(),

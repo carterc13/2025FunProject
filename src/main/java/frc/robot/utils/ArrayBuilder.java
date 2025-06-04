@@ -5,7 +5,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.Constants;
-import frc.robot.subsystems.drive.ModuleIOInputsAutoLogged;
+import frc.robot.subsystems.bot.drive.ModuleIOInputsAutoLogged;
 import java.util.Arrays;
 
 public class ArrayBuilder {
