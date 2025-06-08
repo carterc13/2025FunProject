@@ -4,21 +4,19 @@ import frc.robot.subsystems.bot.Bot;
 import frc.robot.subsystems.bot.Bot.BotType;
 
 public class RobotContainer {
-    private final boolean testingBot = true;    
+  private final boolean testingBot = true;
 
-    private final BotType botType = BotType.CYCLES;
+  private final BotType botType = BotType.CYCLES;
 
-    private final Bot bot;
-    // private final RealDriver driver;
+  private final Bot bot;
+  // private final RealDriver driver;
 
-    public RobotContainer() {
-        bot = new Bot(testingBot, botType);
-        // driver = new RealDriver(testingBot);
+  public RobotContainer() {
+    bot = new Bot(testingBot, botType);
+    // driver = new RealDriver(testingBot);
 
-        
+    configureBindings();
+  }
 
-        configureBindings();
-    }
-
-    private void configureBindings() {}
+  private void configureBindings() {}
 }

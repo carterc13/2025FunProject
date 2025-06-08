@@ -4,14 +4,14 @@
 
 package frc.robot.commands.botCommands;
 
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-
 import static edu.wpi.first.units.Units.Degrees;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -25,10 +25,11 @@ import frc.robot.subsystems.bot.intake.Intake;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class Align extends Command {
   LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
-  SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDeadband(MaxSpeed.times(0.1))
-      .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+  SwerveRequest.FieldCentric drive =
+      new SwerveRequest.FieldCentric()
+          .withDeadband(MaxSpeed.times(0.1))
+          .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
+          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   Drive drivetrain;
   Arm arm;
   Elevator elevator;
@@ -55,11 +56,11 @@ public class Align extends Command {
         arm.L2().schedule();
         elevator.L2().schedule();
         break;
-        case L3:
+      case L3:
         arm.L3().schedule();
         elevator.L3().schedule();
         break;
-        case L4:
+      case L4:
         arm.L4().schedule();
         elevator.L4().schedule();
         break;
@@ -73,32 +74,33 @@ public class Align extends Command {
   public void execute() {
     drivetrain
         .applyRequest(
-            () -> drive
-                .withVelocityX(
-                    MaxSpeed.times(
-                        -translation.calculate(
-                            drivetrain.getPose().getX(),
-                            drivetrain.getReefPosition().getPose().getX())))
-                .withVelocityY(
-                    MaxSpeed.times(
-                        -translation.calculate(
-                            drivetrain.getPose().getY(),
-                            drivetrain.getReefPosition().getPose().getY())))
-                .withRotationalRate(
-                    Constants.MaxAngularRate.times(
-                        rotation.calculate(
-                            drivetrain
-                                .getPose()
-                                .getRotation()
-                                .minus(
-                                    drivetrain
-                                        .getReefPosition()
-                                        .getPose()
-                                        .getRotation()
-                                        .toRotation2d())
-                                .minus(new Rotation2d(Degrees.of(180)))
-                                .getDegrees(),
-                            0))))
+            () ->
+                drive
+                    .withVelocityX(
+                        MaxSpeed.times(
+                            -translation.calculate(
+                                drivetrain.getPose().getX(),
+                                drivetrain.getReefPosition().getPose().getX())))
+                    .withVelocityY(
+                        MaxSpeed.times(
+                            -translation.calculate(
+                                drivetrain.getPose().getY(),
+                                drivetrain.getReefPosition().getPose().getY())))
+                    .withRotationalRate(
+                        Constants.MaxAngularRate.times(
+                            rotation.calculate(
+                                drivetrain
+                                    .getPose()
+                                    .getRotation()
+                                    .minus(
+                                        drivetrain
+                                            .getReefPosition()
+                                            .getPose()
+                                            .getRotation()
+                                            .toRotation2d())
+                                    .minus(new Rotation2d(Degrees.of(180)))
+                                    .getDegrees(),
+                                0))))
         .schedule();
   }
 
@@ -109,6 +111,10 @@ public class Align extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return arm.isAtTarget() && elevator.isAtTarget();
+    return arm.isAtTarget()
+        && elevator.isAtTarget()
+        && drivetrain.distanceToTarget()
+                
+            < Units.inchesToMeters(3);
   }
 }

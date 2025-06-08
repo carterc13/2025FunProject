@@ -21,7 +21,7 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 public class ElevatorIOSIM extends ElevatorIOCTRE {
   private final DCMotor motor = DCMotor.getKrakenX60(4);
   private final PWMTalonFX talonfx = new PWMTalonFX(2);
-  private final PIDController controller = new PIDController(7.0, 0.0, 0.25);
+  private final PIDController controller = new PIDController(100, 0.0, 5);
   private double setpoint = 0;
 
   private final ElevatorSim m_elevatorSim =

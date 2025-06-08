@@ -58,7 +58,9 @@ public class Drop extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    SimCoral.setPose(isRightSource.getAsBoolean()?0:1, startPose.interpolate(endPose, timer.get() / duration));
+    SimCoral.setPose(
+        isRightSource.getAsBoolean() ? 0 : 1,
+        startPose.interpolate(endPose, timer.get() / duration));
   }
 
   // Called once the command ends or is interrupted.

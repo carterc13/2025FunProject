@@ -4,12 +4,11 @@
 
 package frc.robot.subsystems.bot;
 
-import java.util.ArrayList;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import frc.robot.subsystems.bot.Bot.BotType;
 import frc.robot.subsystems.bot.drive.Drive.ReefPositions;
 import frc.robot.subsystems.bot.elevator.Elevator.ElevatorPosition;
+import java.util.ArrayList;
 
 /** Add your docs here. */
 public class Memory {
@@ -39,13 +38,18 @@ public class Memory {
       case CYCLES:
         double distance = 0;
         boolean good = false;
-        // Cycles through all reef faces to make sure it has open spots and uses the one that is the closest
+        // Cycles through all reef faces to make sure it has open spots and uses the one that is the
+        // closest
         for (int i = 0; i < ReefPositions.values().length; i++) {
           if (pose.getTranslation()
-              .getDistance(getPositionFromNum(i).getPose().getTranslation().toTranslation2d()) < distance
+                      .getDistance(
+                          getPositionFromNum(i).getPose().getTranslation().toTranslation2d())
+                  < distance
               && hasOpenSpots(getPositionFromNum(i))) {
-            distance = pose.getTranslation()
-                .getDistance(getPositionFromNum(i).getPose().getTranslation().toTranslation2d());
+            distance =
+                pose.getTranslation()
+                    .getDistance(
+                        getPositionFromNum(i).getPose().getTranslation().toTranslation2d());
             currentTarget = getOpenSpot(getPositionFromNum(i));
           }
         }
@@ -62,40 +66,52 @@ public class Memory {
   private spots getOpenSpot(ReefPositions currentPosition) {
     switch (currentPosition) {
       case A:
-        return !mem2.contains(spots.A2) ? spots.A2
+        return !mem2.contains(spots.A2)
+            ? spots.A2
             : !mem2.contains(spots.A3) ? spots.A3 : !mem2.contains(spots.A4) ? spots.A4 : null;
       case B:
-        return !mem2.contains(spots.B2) ? spots.B2
+        return !mem2.contains(spots.B2)
+            ? spots.B2
             : !mem2.contains(spots.B3) ? spots.B3 : !mem2.contains(spots.B4) ? spots.B4 : null;
       case C:
-        return !mem2.contains(spots.C2) ? spots.C2
+        return !mem2.contains(spots.C2)
+            ? spots.C2
             : !mem2.contains(spots.C3) ? spots.C3 : !mem2.contains(spots.C4) ? spots.C4 : null;
       case D:
-        return !mem2.contains(spots.D2) ? spots.D2
+        return !mem2.contains(spots.D2)
+            ? spots.D2
             : !mem2.contains(spots.D3) ? spots.D3 : !mem2.contains(spots.D4) ? spots.D4 : null;
       case E:
-        return !mem2.contains(spots.E2) ? spots.E2
+        return !mem2.contains(spots.E2)
+            ? spots.E2
             : !mem2.contains(spots.E3) ? spots.E3 : !mem2.contains(spots.E4) ? spots.E4 : null;
       case F:
-        return !mem2.contains(spots.F2) ? spots.F2
+        return !mem2.contains(spots.F2)
+            ? spots.F2
             : !mem2.contains(spots.F3) ? spots.F3 : !mem2.contains(spots.F4) ? spots.F4 : null;
       case G:
-        return !mem2.contains(spots.G2) ? spots.G2
+        return !mem2.contains(spots.G2)
+            ? spots.G2
             : !mem2.contains(spots.G3) ? spots.G3 : !mem2.contains(spots.G4) ? spots.G4 : null;
       case H:
-        return !mem2.contains(spots.H2) ? spots.H2
+        return !mem2.contains(spots.H2)
+            ? spots.H2
             : !mem2.contains(spots.H3) ? spots.H3 : !mem2.contains(spots.H4) ? spots.H4 : null;
       case I:
-        return !mem2.contains(spots.I2) ? spots.I2
+        return !mem2.contains(spots.I2)
+            ? spots.I2
             : !mem2.contains(spots.I3) ? spots.I3 : !mem2.contains(spots.I4) ? spots.I4 : null;
       case J:
-        return !mem2.contains(spots.J2) ? spots.J2
+        return !mem2.contains(spots.J2)
+            ? spots.J2
             : !mem2.contains(spots.J3) ? spots.J3 : !mem2.contains(spots.J4) ? spots.J4 : null;
       case K:
-        return !mem2.contains(spots.K2) ? spots.K2
+        return !mem2.contains(spots.K2)
+            ? spots.K2
             : !mem2.contains(spots.K3) ? spots.K3 : !mem2.contains(spots.K4) ? spots.K4 : null;
       case L:
-        return !mem2.contains(spots.L2) ? spots.L2
+        return !mem2.contains(spots.L2)
+            ? spots.L2
             : !mem2.contains(spots.L3) ? spots.L3 : !mem2.contains(spots.L4) ? spots.L4 : null;
       default:
         return null;

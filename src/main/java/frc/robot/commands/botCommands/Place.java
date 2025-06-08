@@ -5,13 +5,8 @@
 package frc.robot.commands.botCommands;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-
-import static edu.wpi.first.units.Units.Degrees;
-
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -26,10 +21,11 @@ import frc.robot.utils.SimCoral;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class Place extends Command {
   LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
-  SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDeadband(MaxSpeed.times(0.1))
-      .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+  SwerveRequest.FieldCentric drive =
+      new SwerveRequest.FieldCentric()
+          .withDeadband(MaxSpeed.times(0.1))
+          .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
+          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   Drive drivetrain;
   Arm arm;
   Elevator elevator;
@@ -59,6 +55,9 @@ public class Place extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    arm.PREPINTAKE().schedule();
+    elevator.IDLE().schedule();
+    intake.HANDOFF().schedule();
     memory.place();
     SimCoral.placeCoral(elevator.getMode(), memory.getCurrentTarget().getReefPosition());
   }
