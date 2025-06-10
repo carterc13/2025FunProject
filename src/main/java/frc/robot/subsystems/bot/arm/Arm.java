@@ -147,4 +147,44 @@ public class Arm extends SubsystemBase {
   public final Command L4() {
     return setPositionCommand(ArmPosition.L4);
   }
+
+  public final void IDLEm() {
+    setArmPosition(ArmPosition.IDLE);
+  }
+
+  public final void ALGAEIDLEm() {
+    setArmPosition(ArmPosition.ALGAEIDLE);
+  }
+
+  public final void PREPINTAKEm() {
+    setArmPosition(ArmPosition.PREPINTAKE);
+  }
+
+  public final void INTAKEm() {
+    setArmPosition(ArmPosition.INTAKE);
+  }
+
+  public final void CORALIDLEm() {
+    setArmPosition(ArmPosition.CORALIDLE);
+  }
+
+  public final void NETm() {
+    setArmPosition(ArmPosition.NET);
+  }
+
+  public final void L1m() {
+    setArmPosition(ArmPosition.L1);
+  }
+
+  public final void L2m() {
+    setArmPosition(ArmPosition.L2);
+  }
+
+  public final void L3m() {
+    setArmPosition(ArmPosition.L3);
+  }
+
+  public final void L4m() {
+    setArmPosition(ArmPosition.L4);
+  }
 }

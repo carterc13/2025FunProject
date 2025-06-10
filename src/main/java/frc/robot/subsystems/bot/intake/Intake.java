@@ -98,4 +98,16 @@ public class Intake extends SubsystemBase {
   public final Command STOW() {
     return setPositionCommand(IntakePosition.STOW);
   }
+
+  public final void INTAKEm() {
+    setIntakePosition(IntakePosition.INTAKE);
+  }
+
+  public final void HANDOFFm() {
+    setIntakePosition(IntakePosition.HANDOFF);
+  }
+
+  public final void STOWm() {
+    setIntakePosition(IntakePosition.STOW);
+  }
 }

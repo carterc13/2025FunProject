@@ -4,21 +4,15 @@
 
 package frc.robot.commands.botCommands;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.bot.Memory;
 import frc.robot.subsystems.bot.arm.Arm;
-import frc.robot.subsystems.bot.drive.Drive;
+import frc.robot.subsystems.bot.arm.Arm.ArmPosition;
 import frc.robot.subsystems.bot.elevator.Elevator;
 import frc.robot.subsystems.bot.intake.Intake;
 
@@ -30,22 +24,18 @@ public class Align extends Command {
           .withDeadband(MaxSpeed.times(0.1))
           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-  Drive drivetrain;
   Arm arm;
   Elevator elevator;
   Intake intake;
   Memory memory;
-  PIDController translation = new PIDController(1, 0, 0.001);
-  PIDController rotation = new PIDController(0.04, 0, 0.00075);
 
   /** Creates a new Align. */
-  public Align(Drive drivetrain, Arm arm, Elevator elevator, Intake intake, Memory memory) {
-    this.drivetrain = drivetrain;
+  public Align(Arm arm, Elevator elevator, Intake intake, Memory memory) {
     this.arm = arm;
     this.elevator = elevator;
     this.intake = intake;
     this.memory = memory;
-    addRequirements(drivetrain, arm, elevator, intake);
+    addRequirements(arm, elevator, intake);
   }
 
   // Called when the command is initially scheduled.
@@ -53,16 +43,22 @@ public class Align extends Command {
   public void initialize() {
     switch (memory.getCurrentTarget().getElevatorPosition()) {
       case L2:
-        arm.L2().schedule();
-        elevator.L2().schedule();
+        if (arm.getMode() != ArmPosition.L2) {
+          arm.L2().schedule();
+          elevator.L2().schedule();
+        }
         break;
       case L3:
-        arm.L3().schedule();
-        elevator.L3().schedule();
+        if (arm.getMode() != ArmPosition.L3) {
+          arm.L3().schedule();
+          elevator.L3().schedule();
+        }
         break;
       case L4:
-        arm.L4().schedule();
-        elevator.L4().schedule();
+        if (arm.getMode() != ArmPosition.L4) {
+          arm.L4().schedule();
+          elevator.L4().schedule();
+        }
         break;
       default:
         break;
@@ -72,36 +68,36 @@ public class Align extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    drivetrain
-        .applyRequest(
-            () ->
-                drive
-                    .withVelocityX(
-                        MaxSpeed.times(
-                            -translation.calculate(
-                                drivetrain.getPose().getX(),
-                                drivetrain.getReefPosition().getPose().getX())))
-                    .withVelocityY(
-                        MaxSpeed.times(
-                            -translation.calculate(
-                                drivetrain.getPose().getY(),
-                                drivetrain.getReefPosition().getPose().getY())))
-                    .withRotationalRate(
-                        Constants.MaxAngularRate.times(
-                            rotation.calculate(
-                                drivetrain
-                                    .getPose()
-                                    .getRotation()
-                                    .minus(
-                                        drivetrain
-                                            .getReefPosition()
-                                            .getPose()
-                                            .getRotation()
-                                            .toRotation2d())
-                                    .minus(new Rotation2d(Degrees.of(180)))
-                                    .getDegrees(),
-                                0))))
-        .schedule();
+    // drivetrain
+    //     .applyRequest(
+    //         () ->
+    //             drive
+    //                 .withVelocityX(
+    //                     MaxSpeed.times(
+    //                         -translation.calculate(
+    //                             drivetrain.getPose().getX(),
+    //                             drivetrain.getReefPosition().getPose().getX())))
+    //                 .withVelocityY(
+    //                     MaxSpeed.times(
+    //                         -translation.calculate(
+    //                             drivetrain.getPose().getY(),
+    //                             drivetrain.getReefPosition().getPose().getY())))
+    //                 .withRotationalRate(
+    //                     Constants.MaxAngularRate.times(
+    //                         rotation.calculate(
+    //                             drivetrain
+    //                                 .getPose()
+    //                                 .getRotation()
+    //                                 .minus(
+    //                                     drivetrain
+    //                                         .getReefPosition()
+    //                                         .getPose()
+    //                                         .getRotation()
+    //                                         .toRotation2d())
+    //                                 .minus(new Rotation2d(Degrees.of(180)))
+    //                                 .getDegrees(),
+    //                             0))))
+    //     .schedule();
   }
 
   // Called once the command ends or is interrupted.
@@ -111,10 +107,6 @@ public class Align extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return arm.isAtTarget()
-        && elevator.isAtTarget()
-        && drivetrain.distanceToTarget()
-                
-            < Units.inchesToMeters(3);
+    return false;
   }
 }

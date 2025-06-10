@@ -20,6 +20,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -253,13 +254,13 @@ public class Drive extends SubsystemBase {
   }
 
   // public Command pathfinderToPose(Supplier<Rotation2d> poseSupplier) {
-  //   return new DeferredCommand(
-  //       () ->
-  //           AutoBuilder.followPath(
-  //               Pathfinding.getCurrentPath(
-  //                   new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
-  //                   new GoalEndState(MetersPerSecond.of(1), poseSupplier.get()))),
-  //       Set.of(this));
+  // return new DeferredCommand(
+  // () ->
+  // AutoBuilder.followPath(
+  // Pathfinding.getCurrentPath(
+  // new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
+  // new GoalEndState(MetersPerSecond.of(1), poseSupplier.get()))),
+  // Set.of(this));
   // }
 
   // public Command pathfindToPose(Supplier<Pose2d> poseSupplier) {
@@ -279,7 +280,7 @@ public class Drive extends SubsystemBase {
    * @return Command to run
    */
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-    return runOnce(() -> io.setControl(requestSupplier.get()));
+    return run(() -> io.setControl(requestSupplier.get()));
   }
 
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
@@ -370,7 +371,11 @@ public class Drive extends SubsystemBase {
     m_field.setRobotPose(getPose());
     SmartDashboard.putData("field", m_field);
 
+    Pathfinding.setStartPosition(getPose().getTranslation());
+
     Logger.recordOutput("Reef Alignment", getReefPosition().getPose());
+
+    isRightSource = setRightSource();
   }
 
   public void resetPose(Pose2d pose) {
@@ -626,6 +631,13 @@ public class Drive extends SubsystemBase {
     history.add(location);
   }
 
+  @AutoLogOutput(key = "Drive/Is Right Source")
+  private boolean setRightSource() {
+    return AllianceFlipUtil.shouldFlip()
+        ? getPose().getY() > FieldConstants.fieldWidth.in(Meters) / 2
+        : getPose().getY() < FieldConstants.fieldWidth.in(Meters) / 2;
+  }
+
   private void setDriveState(DriveStates state) {
     driveState = state;
     Logger.recordOutput("Drive State", driveState.toString());
@@ -663,9 +675,24 @@ public class Drive extends SubsystemBase {
   @AutoLogOutput(key = "Drive/Distance To Target")
   public double distanceToTarget() {
     return getPose()
-    .getTranslation()
-    .minus(getReefPosition().getPose().getTranslation().toTranslation2d())
-    .getDistance(new Translation2d(0, 0));
+        .getTranslation()
+        .minus(getReefPosition().getPose().getTranslation().toTranslation2d())
+        .getDistance(new Translation2d(0, 0));
+  }
+
+  @AutoLogOutput(key = "Drive/Angle To Target")
+  public double angleFromTarget() {
+    return getPose()
+        .getRotation()
+        .minus(getReefPosition().getPose().getRotation().toRotation2d())
+        .minus(new Rotation2d(Degrees.of(180)))
+        .getDegrees();
+  }
+
+  @AutoLogOutput(key = "Drive/Is At Target")
+  public boolean isAtTarget() {
+    return Math.abs(distanceToTarget()) < Units.inchesToMeters(3)
+        && Math.abs(angleFromTarget()) < 5;
   }
 
   private static final double xOffset = 24;

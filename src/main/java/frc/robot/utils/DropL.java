@@ -10,10 +10,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import java.util.Random;
-import java.util.function.BooleanSupplier;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class Drop extends Command {
+public class DropL extends Command {
   /** Creates a new Intake. */
   private Pose3d endPose;
 
@@ -21,10 +20,8 @@ public class Drop extends Command {
   private double duration;
   private Timer timer = new Timer();
   private static Random random = new Random();
-  private BooleanSupplier isRightSource;
 
-  public Drop(BooleanSupplier isRightSource) {
-    this.isRightSource = isRightSource;
+  public DropL() {
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -35,22 +32,22 @@ public class Drop extends Command {
         AllianceFlipUtil.apply(
             new Pose3d(
                 0.75,
-                isRightSource.getAsBoolean() ? 0.5 : 7.57,
+                7.57,
                 1.15,
                 new Rotation3d(
                     Units.degreesToRadians(0),
                     Units.degreesToRadians(35),
-                    Units.degreesToRadians(isRightSource.getAsBoolean() ? 55 : -55))));
+                    Units.degreesToRadians(-55))));
     endPose =
         AllianceFlipUtil.apply(
             new Pose3d(
                 random.nextDouble(1, 2.25),
-                isRightSource.getAsBoolean() ? random.nextDouble(1, 3) : random.nextDouble(5, 7),
-                0.0,
+                random.nextDouble(5, 7),
+                Units.inchesToMeters(4.5/2),
                 new Rotation3d(
                     Units.degreesToRadians(0),
                     Units.degreesToRadians(0),
-                    Units.degreesToRadians(random.nextDouble(0, 360)))));
+                    Units.degreesToRadians(random.nextDouble(-55-90, -55+90)))));
     duration = startPose.getTranslation().getDistance(endPose.getTranslation()) / 16;
     timer.restart();
   }
@@ -58,9 +55,7 @@ public class Drop extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    SimCoral.setPose(
-        isRightSource.getAsBoolean() ? 0 : 1,
-        startPose.interpolate(endPose, timer.get() / duration));
+    SimCoral.setPose(1, startPose.interpolate(endPose, timer.get() / duration));
   }
 
   // Called once the command ends or is interrupted.

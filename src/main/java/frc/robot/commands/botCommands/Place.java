@@ -6,7 +6,6 @@ package frc.robot.commands.botCommands;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -31,8 +30,6 @@ public class Place extends Command {
   Elevator elevator;
   Intake intake;
   Memory memory;
-  PIDController translation = new PIDController(1, 0, 0.001);
-  PIDController rotation = new PIDController(0.04, 0, 0.00075);
 
   /** Creates a new Align. */
   public Place(Drive drivetrain, Arm arm, Elevator elevator, Intake intake, Memory memory) {
@@ -55,11 +52,11 @@ public class Place extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    arm.PREPINTAKE().schedule();
-    elevator.IDLE().schedule();
-    intake.HANDOFF().schedule();
-    memory.place();
     SimCoral.placeCoral(elevator.getMode(), memory.getCurrentTarget().getReefPosition());
+    memory.place();
+    arm.IDLE().schedule();
+    elevator.IDLE().schedule();
+    intake.STOW().schedule();
   }
 
   // Returns true when the command should end.

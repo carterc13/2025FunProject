@@ -13,20 +13,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.bot.drive.Drive.ReefPositions;
 import frc.robot.subsystems.bot.elevator.Elevator.ElevatorPosition;
 import java.util.ArrayList;
-import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
 public class SimCoral {
   private static ArrayList<Pose3d> poses = new ArrayList<>();
-  private static Command tempCommand;
 
   public static void start() {
     PoseComputer.setRedAlliance();
-    poses.add(new Pose3d());
-    poses.add(new Pose3d());
-    tempCommand = new Drop(() -> true).andThen(new Drop(() -> false));
-    tempCommand.schedule();
+    poses.add(0, new Pose3d());
+    poses.add(1, new Pose3d());
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
   }
 
@@ -66,8 +62,12 @@ public class SimCoral {
                 Units.degreesToRadians(SmartDashboard.getNumber("Coral/yaw", 0)))));
   }
 
-  public static Command Drop(BooleanSupplier isRightSource) {
-    return new Drop(isRightSource);
+  public static Command DropR() {
+    return new DropR();
+  }
+
+  public static Command DropL() {
+    return new DropL();
   }
 
   public static enum spots {
