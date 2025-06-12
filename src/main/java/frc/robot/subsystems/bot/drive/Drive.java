@@ -689,10 +689,33 @@ public class Drive extends SubsystemBase {
         .getDegrees();
   }
 
+  @AutoLogOutput(key = "Drive/Distance To Intake")
+  public double distanceToIntake(Pose2d pose) {
+    return getPose()
+        .getTranslation()
+        .minus(pose.getTranslation())
+        .getDistance(new Translation2d(0, 0));
+  }
+
+  @AutoLogOutput(key = "Drive/Angle To Intake")
+  public double angleFromIntake(Pose2d pose) {
+    return getPose()
+        .getRotation()
+        .minus(pose.getRotation())
+        .minus(new Rotation2d(Degrees.of(180)))
+        .getDegrees();
+  }
+
   @AutoLogOutput(key = "Drive/Is At Target")
   public boolean isAtTarget() {
     return Math.abs(distanceToTarget()) < Units.inchesToMeters(3)
         && Math.abs(angleFromTarget()) < 5;
+  }
+
+  @AutoLogOutput(key = "Drive/Is At Intake")
+  public boolean isReadyForIntake(Pose2d coralPose) {
+    return Math.abs(distanceToIntake(coralPose)) < Units.inchesToMeters(3)
+        && Math.abs(angleFromIntake(coralPose)) < 5;
   }
 
   private static final double xOffset = 24;

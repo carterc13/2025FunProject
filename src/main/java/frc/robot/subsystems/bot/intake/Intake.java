@@ -26,6 +26,7 @@ public class Intake extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
+    Logger.recordOutput("States/INTAKE", currentMode);
   }
 
   private void setAngle(Angle angle) {

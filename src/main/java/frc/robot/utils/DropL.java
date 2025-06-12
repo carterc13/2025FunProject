@@ -43,11 +43,11 @@ public class DropL extends Command {
             new Pose3d(
                 random.nextDouble(1, 2.25),
                 random.nextDouble(5, 7),
-                Units.inchesToMeters(4.5/2),
+                Units.inchesToMeters(4.5 / 2),
                 new Rotation3d(
                     Units.degreesToRadians(0),
                     Units.degreesToRadians(0),
-                    Units.degreesToRadians(random.nextDouble(-55-90, -55+90)))));
+                    Units.degreesToRadians(random.nextDouble(-55 - 90, -55 + 90)))));
     duration = startPose.getTranslation().getDistance(endPose.getTranslation()) / 16;
     timer.restart();
   }

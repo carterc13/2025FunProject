@@ -26,6 +26,7 @@ public class Elevator extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Elevator", inputs);
+    Logger.recordOutput("States/ELEVATOR", currentMode);
   }
 
   private void setDistance(Distance distance) {

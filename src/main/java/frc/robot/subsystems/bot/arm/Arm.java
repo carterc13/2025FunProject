@@ -26,6 +26,7 @@ public class Arm extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Arm", inputs);
+    Logger.recordOutput("States/ARM", currentMode);
   }
 
   private void setAngle(Angle angle) {
