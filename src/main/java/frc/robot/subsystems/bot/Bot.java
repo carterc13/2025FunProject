@@ -69,13 +69,15 @@ public class Bot extends SubsystemBase {
   private Pose2d currentTarget = new Pose2d();
   private PathConstraints constraints =
       new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136));
-  PIDController translation = new PIDController(1.25, 1, 0.001);
-  PIDController rotation = new PIDController(0.04, 0, 0.00075);
+  PIDController translation = new PIDController(5, 0, 0.25);
+  PIDController translationy = new PIDController(5, 0, 0.25);
+  PIDController rotation = new PIDController(0.1, 0, 0.003);
   private boolean hasCoral = false;
   private boolean firstRun = true;
 
   public Bot(boolean testingBot, BotType type) {
     SimCoral.start();
+    // rotation.enableContinuousInput(-Math.PI, Math.PI);
     botType = type;
     joystick =
         new TunableController(testingBot ? 0 : 1)
@@ -172,104 +174,60 @@ public class Bot extends SubsystemBase {
   public void periodic() {
     Logger.recordOutput("Bot/State", state);
     Logger.recordOutput("States/ROBOT", state);
+    SimCoral.loggingPeriodic(drivetrain.getPose());
     if (DriverStation.isEnabled()) {
       if (currentCommand.isFinished()) {
         switch (state) {
           case TOREEF:
             state = States.ALIGN;
-            currentCommand =
-                new Align(arm, elevator, intake, memory)
-                    .alongWith(
-                        drivetrain.applyRequest(
-                            () ->
-                                drive
-                                    .withVelocityX(
-                                        MaxSpeed.times(
-                                            translation.calculate(
-                                                drivetrain.getPose().getX(),
-                                                drivetrain.getReefPosition().getPose().getX())))
-                                    .withVelocityY(
-                                        MaxSpeed.times(
-                                            translation.calculate(
-                                                drivetrain.getPose().getY(),
-                                                drivetrain.getReefPosition().getPose().getY())))
-                                    .withRotationalRate(
-                                        Constants.MaxAngularRate.times(
-                                            rotation.calculate(
-                                                drivetrain
-                                                    .getPose()
-                                                    .getRotation()
-                                                    .minus(
-                                                        drivetrain
-                                                            .getReefPosition()
-                                                            .getPose()
-                                                            .getRotation()
-                                                            .toRotation2d())
-                                                    .minus(new Rotation2d(Degrees.of(180)))
-                                                    .getDegrees(),
-                                                0)))));
-            Pathfinding.setGoalPosition(
-                SimCoral.getLeftPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                        > SimCoral.getRightPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                    ? SimCoral.getRightPose()
-                        .plus(
-                            new Transform2d(
-                                0,
-                                Units.inchesToMeters(32),
-                                new Rotation2d(Units.degreesToRadians(0))))
-                        .getTranslation()
-                    : SimCoral.getLeftPose()
-                        .plus(
-                            new Transform2d(
-                                0,
-                                Units.inchesToMeters(32),
-                                new Rotation2d(Units.degreesToRadians(0))))
-                        .getTranslation());
-            Logger.recordOutput(
-                "Coral Pose",
-                (SimCoral.getLeftPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                        > SimCoral.getRightPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                    ? SimCoral.getRightPose()
-                        .plus(
-                            new Transform2d(
-                                0,
-                                Units.inchesToMeters(32),
-                                new Rotation2d(Units.degreesToRadians(0))))
-                    : SimCoral.getLeftPose()
-                        .plus(
-                            new Transform2d(
-                                0,
-                                Units.inchesToMeters(32),
-                                new Rotation2d(Units.degreesToRadians(0))))));
+            translation.reset();
+            translationy.reset();
+            rotation.reset();
+            currentCommand = new Align(arm, elevator, intake, memory);
+            Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
+            Logger.recordOutput("Coral Pose", getSimCoralPose());
             break;
           case ALIGN:
-            state = States.PLACE;
-            currentCommand = new Place(drivetrain, arm, elevator, intake, memory);
+            if (drivetrain.isAtTarget() && arm.isAtTarget() && elevator.isAtTarget()) {
+              state = States.PLACE;
+              currentCommand = new Place(drivetrain, arm, elevator, intake, memory);
+            } else {
+              drivetrain
+                  .applyRequest(
+                      () ->
+                          drive
+                              .withVelocityX(
+                                  MaxSpeed.times(
+                                      translation.calculate(
+                                          drivetrain.getPose().getX(),
+                                          drivetrain.getReefPosition().getPose().getX())))
+                              .withVelocityY(
+                                  MaxSpeed.times(
+                                      translationy.calculate(
+                                          drivetrain.getPose().getY(),
+                                          drivetrain.getReefPosition().getPose().getY())))
+                              .withRotationalRate(
+                                  Constants.MaxAngularRate.times(
+                                      rotation.calculate(
+                                          drivetrain
+                                              .getPose()
+                                              .getRotation()
+                                              .minus(
+                                                  drivetrain
+                                                      .getReefPosition()
+                                                      .getPose()
+                                                      .getRotation()
+                                                      .toRotation2d())
+                                              .minus(new Rotation2d(Degrees.of(180)))
+                                              .getDegrees(),
+                                          0))))
+                  .schedule();
+            }
             break;
           case PLACE:
             state = States.TOINTAKE;
             currentCommand = newAutoToIntake();
-            memory.updateNextBest(
-                SimCoral.getLeftPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                        > SimCoral.getRightPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                    ? SimCoral.getRightPose()
-                        .plus(new Transform2d(Units.inchesToMeters(5), 0, new Rotation2d()))
-                        .getTranslation()
-                    : SimCoral.getLeftPose()
-                        .plus(new Transform2d(Units.inchesToMeters(5), 0, new Rotation2d()))
-                        .getTranslation());
+            memory.updateNextBest(getSimCoralPose().getTranslation());
             drivetrain.setReefPosition(memory.getCurrentTarget().getReefPosition());
             Pathfinding.setGoalPosition(
                 drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d());
@@ -308,11 +266,6 @@ public class Bot extends SubsystemBase {
       } else {
         switch (state) {
           case ALIGN:
-            if (drivetrain.isAtTarget() && arm.isAtTarget() && elevator.isAtTarget()) {
-              currentCommand.cancel();
-              currentCommand = new ReturnTrue();
-              currentCommand.schedule();
-            }
             break;
           default:
             break;
@@ -330,21 +283,7 @@ public class Bot extends SubsystemBase {
   }
 
   private void runIntake() {
-    Pose2d coralPose =
-        (SimCoral.getLeftPose()
-                    .getTranslation()
-                    .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                > SimCoral.getRightPose()
-                    .getTranslation()
-                    .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-            ? SimCoral.getRightPose()
-                .plus(
-                    new Transform2d(
-                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(0))))
-            : SimCoral.getLeftPose()
-                .plus(
-                    new Transform2d(
-                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(0)))));
+    Pose2d coralPose = getSimCoralPose();
     if (drivetrain.isReadyForIntake(coralPose)) {
       if (arm.isAtTarget()
           && arm.getMode() == ArmPosition.PREPINTAKE
@@ -393,7 +332,7 @@ public class Bot extends SubsystemBase {
                             translation.calculate(drivetrain.getPose().getX(), coralPose.getX())))
                     .withVelocityY(
                         MaxSpeed.times(
-                            translation.calculate(drivetrain.getPose().getY(), coralPose.getY())))
+                            translationy.calculate(drivetrain.getPose().getY(), coralPose.getY())))
                     .withRotationalRate(
                         Constants.MaxAngularRate.times(
                             rotation.calculate(drivetrain.angleFromIntake(coralPose), 0))))
@@ -407,28 +346,9 @@ public class Bot extends SubsystemBase {
                 constraints,
                 new GoalEndState(
                     MetersPerSecond.of(0.0),
-                    SimCoral.getLeftPose()
-                                .getTranslation()
-                                .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                            > SimCoral.getRightPose()
-                                .getTranslation()
-                                .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                        ? SimCoral.getRightPose()
-                            .plus(
-                                new Transform2d(
-                                    0,
-                                    Units.inchesToMeters(32),
-                                    new Rotation2d(Units.degreesToRadians(0))))
-                            .getRotation()
-                            .minus(new Rotation2d(Units.degreesToRadians(180)))
-                        : SimCoral.getLeftPose()
-                            .plus(
-                                new Transform2d(
-                                    0,
-                                    Units.inchesToMeters(32),
-                                    new Rotation2d(Units.degreesToRadians(0))))
-                            .getRotation()
-                            .minus(new Rotation2d(Units.degreesToRadians(180)))))
+                    getSimCoralPose()
+                        .getRotation()
+                        .minus(new Rotation2d(Units.degreesToRadians(180)))))
             .getPathPoses()
             .toArray(
                 new Pose2d
@@ -436,30 +356,9 @@ public class Bot extends SubsystemBase {
                             constraints,
                             new GoalEndState(
                                 MetersPerSecond.of(0.0),
-                                SimCoral.getLeftPose()
-                                            .getTranslation()
-                                            .getDistance(
-                                                AutoBuilder.getCurrentPose().getTranslation())
-                                        > SimCoral.getRightPose()
-                                            .getTranslation()
-                                            .getDistance(
-                                                AutoBuilder.getCurrentPose().getTranslation())
-                                    ? SimCoral.getRightPose()
-                                        .plus(
-                                            new Transform2d(
-                                                0,
-                                                Units.inchesToMeters(32),
-                                                new Rotation2d(Units.degreesToRadians(0))))
-                                        .getRotation()
-                                        .minus(new Rotation2d(Units.degreesToRadians(180)))
-                                    : SimCoral.getLeftPose()
-                                        .plus(
-                                            new Transform2d(
-                                                0,
-                                                Units.inchesToMeters(32),
-                                                new Rotation2d(Units.degreesToRadians(0))))
-                                        .getRotation()
-                                        .minus(new Rotation2d(Units.degreesToRadians(180)))))
+                                getSimCoralPose()
+                                    .getRotation()
+                                    .minus(new Rotation2d(Units.degreesToRadians(180)))))
                         .getPathPoses()
                         .size()]));
     return AutoBuilder.followPath(
@@ -467,38 +366,9 @@ public class Bot extends SubsystemBase {
             new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
             new GoalEndState(
                 MetersPerSecond.of(0.0),
-                SimCoral.getLeftPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                        > SimCoral.getRightPose()
-                            .getTranslation()
-                            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-                    ? SimCoral.getRightPose()
-                        .plus(
-                            new Transform2d(
-                                0,
-                                Units.inchesToMeters(32),
-                                new Rotation2d(Units.degreesToRadians(0))))
-                        .getRotation()
-                        .minus(new Rotation2d(Units.degreesToRadians(180)))
-                    : SimCoral.getLeftPose()
-                        .plus(
-                            new Transform2d(
-                                0,
-                                Units.inchesToMeters(32),
-                                new Rotation2d(Units.degreesToRadians(0))))
-                        .getRotation()
-                        .minus(new Rotation2d(Units.degreesToRadians(180))))));
-    // currentTarget =
-    // SimCoral.getLeftPose().getTranslation().getDistance(drivetrain.getPose().getTranslation())
-    // > SimCoral.getRightPose()
-    // .getTranslation()
-    // .getDistance(drivetrain.getPose().getTranslation())
-    // ? SimCoral.getRightPose()
-    // .minus(new Transform2d(Units.inchesToMeters(5), 0, new Rotation2d()))
-    // : SimCoral.getLeftPose()
-    // .minus(new Transform2d(Units.inchesToMeters(5), 0, new Rotation2d()));
-    // return AutoBuilder.pathfindToPose(currentTarget, constraints);
+                getSimCoralPose()
+                    .getRotation()
+                    .minus(new Rotation2d(Units.degreesToRadians(180))))));
   }
 
   private Command newAutoToReef() {
@@ -540,6 +410,63 @@ public class Bot extends SubsystemBase {
     // drivetrain.getReefPosition().getPose().getY(),
     // drivetrain.getReefPosition().getPose().getAngle());
     // return AutoBuilder.pathfindToPose(currentTarget, constraints);
+  }
+
+  private Pose2d getSimCoralPose() {
+    return SimCoral.getLeftPose()
+                .getTranslation()
+                .getDistance(drivetrain.getPose().getTranslation())
+            > SimCoral.getRightPose()
+                .getTranslation()
+                .getDistance(AutoBuilder.getCurrentPose().getTranslation())
+        ? SimCoral.getRightPose()
+                    .plus(
+                        new Transform2d(
+                            0,
+                            Units.inchesToMeters(32),
+                            new Rotation2d(Units.degreesToRadians(90))))
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation())
+                > SimCoral.getRightPose()
+                    .plus(
+                        new Transform2d(
+                            0,
+                            Units.inchesToMeters(-32),
+                            new Rotation2d(Units.degreesToRadians(-90))))
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation())
+            ? SimCoral.getRightPose()
+                .plus(
+                    new Transform2d(
+                        0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))))
+            : SimCoral.getRightPose()
+                .plus(
+                    new Transform2d(
+                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))))
+        : SimCoral.getLeftPose()
+                    .plus(
+                        new Transform2d(
+                            0,
+                            Units.inchesToMeters(32),
+                            new Rotation2d(Units.degreesToRadians(90))))
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation())
+                > SimCoral.getLeftPose()
+                    .plus(
+                        new Transform2d(
+                            0,
+                            Units.inchesToMeters(-32),
+                            new Rotation2d(Units.degreesToRadians(-90))))
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation())
+            ? SimCoral.getLeftPose()
+                .plus(
+                    new Transform2d(
+                        0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))))
+            : SimCoral.getLeftPose()
+                .plus(
+                    new Transform2d(
+                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))));
   }
 
   public enum BotType {

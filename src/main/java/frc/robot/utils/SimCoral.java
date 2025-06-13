@@ -6,7 +6,9 @@ package frc.robot.utils;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -18,12 +20,51 @@ import org.littletonrobotics.junction.Logger;
 /** Add your docs here. */
 public class SimCoral {
   private static ArrayList<Pose3d> poses = new ArrayList<>();
+  private static Pose2d l1 = new Pose2d();
+  private static Pose2d l2 = new Pose2d();
+  private static Pose2d r1 = new Pose2d();
+  private static Pose2d r2 = new Pose2d();
 
   public static void start() {
     PoseComputer.setRedAlliance();
     poses.add(0, new Pose3d());
     poses.add(1, new Pose3d());
     Logger.recordOutput("Coral", poses.toArray(new Pose3d[poses.size()]));
+    SmartDashboard.putNumber("Coral/x", 0);
+    SmartDashboard.putNumber("Coral/y", 0);
+    SmartDashboard.putNumber("Coral/z", 0);
+    SmartDashboard.putNumber("Coral/roll", 0);
+    SmartDashboard.putNumber("Coral/pitch", 0);
+    SmartDashboard.putNumber("Coral/yaw", 0);
+  }
+
+  public static void loggingPeriodic(Pose2d pose) {
+    l1 =
+        getLeftPose()
+            .plus(
+                new Transform2d(
+                    0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))));
+    l2 =
+        getLeftPose()
+            .plus(
+                new Transform2d(
+                    0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))));
+    r1 =
+        getRightPose()
+            .plus(
+                new Transform2d(
+                    0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))));
+    r2 =
+        getRightPose()
+            .plus(
+                new Transform2d(
+                    0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))));
+
+    Logger.recordOutput("Possible Poses", new Pose2d[] {l1, l2, r1, r2});
+    Logger.recordOutput("Possible Tragectory 1", new Pose2d[] {l1, pose});
+    Logger.recordOutput("Possible Tragectory 2", new Pose2d[] {l2, pose});
+    Logger.recordOutput("Possible Tragectory 3", new Pose2d[] {r1, pose});
+    Logger.recordOutput("Possible Tragectory 4", new Pose2d[] {r2, pose});
   }
 
   public static void setPose(int index, Pose3d pose) {
@@ -51,7 +92,7 @@ public class SimCoral {
 
   public static void tempCoral() {
     Logger.recordOutput(
-        "Coral",
+        "TMP Coral",
         new Pose3d(
             SmartDashboard.getNumber("Coral/x", 0),
             SmartDashboard.getNumber("Coral/y", 0),
@@ -60,6 +101,20 @@ public class SimCoral {
                 Units.degreesToRadians(SmartDashboard.getNumber("Coral/roll", 0)),
                 Units.degreesToRadians(SmartDashboard.getNumber("Coral/pitch", 0)),
                 Units.degreesToRadians(SmartDashboard.getNumber("Coral/yaw", 0)))));
+    Logger.recordOutput(
+        "TMP Pose",
+        new Pose3d(
+                SmartDashboard.getNumber("Coral/x", 0),
+                SmartDashboard.getNumber("Coral/y", 0),
+                SmartDashboard.getNumber("Coral/z", 0),
+                new Rotation3d(
+                    Units.degreesToRadians(SmartDashboard.getNumber("Coral/roll", 0)),
+                    Units.degreesToRadians(SmartDashboard.getNumber("Coral/pitch", 0)),
+                    Units.degreesToRadians(SmartDashboard.getNumber("Coral/yaw", 0))))
+            .toPose2d()
+            .plus(
+                new Transform2d(
+                    0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(90)))));
   }
 
   public static Command DropR() {

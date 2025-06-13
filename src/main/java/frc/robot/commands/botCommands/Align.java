@@ -40,30 +40,7 @@ public class Align extends Command {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {
-    switch (memory.getCurrentTarget().getElevatorPosition()) {
-      case L2:
-        if (arm.getMode() != ArmPosition.L2) {
-          arm.L2().schedule();
-          elevator.L2().schedule();
-        }
-        break;
-      case L3:
-        if (arm.getMode() != ArmPosition.L3) {
-          arm.L3().schedule();
-          elevator.L3().schedule();
-        }
-        break;
-      case L4:
-        if (arm.getMode() != ArmPosition.L4) {
-          arm.L4().schedule();
-          elevator.L4().schedule();
-        }
-        break;
-      default:
-        break;
-    }
-  }
+  public void initialize() {}
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
@@ -102,11 +79,34 @@ public class Align extends Command {
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    switch (memory.getCurrentTarget().getElevatorPosition()) {
+      case L2:
+        if (arm.getMode() != ArmPosition.L2) {
+          arm.L2().schedule();
+          elevator.L2().schedule();
+        }
+        break;
+      case L3:
+        if (arm.getMode() != ArmPosition.L3) {
+          arm.L3().schedule();
+          elevator.L3().schedule();
+        }
+        break;
+      case L4:
+        if (arm.getMode() != ArmPosition.L4) {
+          arm.L4().schedule();
+          elevator.L4().schedule();
+        }
+        break;
+      default:
+        break;
+    }
+  }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return true;
   }
 }
