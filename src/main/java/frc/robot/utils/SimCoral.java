@@ -80,6 +80,13 @@ public class SimCoral {
     return poses.get(0).toPose2d();
   }
 
+  public static Pose3d[] getGroundCoral() {
+    Pose3d[] groundPoses = new Pose3d[2];
+    groundPoses[0] = poses.get(0);
+    groundPoses[1] = poses.get(1);
+    return groundPoses;
+  }
+
   public static void placeCoral(ElevatorPosition level, ReefPositions position) {
     spots spot = getSpot(position, level);
     if (spot != null && spot != spots.Level1) {

@@ -42,6 +42,8 @@ import frc.robot.subsystems.bot.intake.Intake.IntakePosition;
 import frc.robot.subsystems.bot.intake.IntakeIOSIM;
 import frc.robot.subsystems.bot.vision.Vision;
 import frc.robot.subsystems.bot.vision.VisionIOPhotonVisionSIM;
+import frc.robot.subsystems.bot.vision.coral.VisionCoral;
+import frc.robot.subsystems.bot.vision.coral.VisionIOPhotonVisionSIMCoral;
 import frc.robot.utils.SimCoral;
 import frc.robot.utils.TunableController;
 import frc.robot.utils.TunableController.TunableControllerType;
@@ -51,11 +53,14 @@ public class Bot extends SubsystemBase {
   private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
   private final Drive drivetrain;
   private final Vision vision;
+  private final VisionCoral visionCoral;
   private final Arm arm;
   private final Intake intake;
   private final Elevator elevator;
-  private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-  private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+  // private final SwerveRequest.SwerveDriveBrake brake = new
+  // SwerveRequest.SwerveDriveBrake();
+  // private final SwerveRequest.PointWheelsAt point = new
+  // SwerveRequest.PointWheelsAt();
   private final SwerveRequest.FieldCentric drive =
       new SwerveRequest.FieldCentric()
           .withDeadband(MaxSpeed.times(0.1))
@@ -66,16 +71,17 @@ public class Bot extends SubsystemBase {
   private final Memory memory;
   private States state = States.AUTOINTAKE;
   private Command currentCommand = new ReturnTrue();
-  private Pose2d currentTarget = new Pose2d();
   private PathConstraints constraints =
-      new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136));
+      new PathConstraints(5.72, 10.1, 4.634, Units.degreesToRadians(1136));
   PIDController translation = new PIDController(5, 0, 0.25);
   PIDController translationy = new PIDController(5, 0, 0.25);
   PIDController rotation = new PIDController(0.1, 0, 0.003);
   private boolean hasCoral = false;
   private boolean firstRun = true;
+  private final boolean testingBot;
 
   public Bot(boolean testingBot, BotType type) {
+    this.testingBot = testingBot;
     SimCoral.start();
     // rotation.enableContinuousInput(-Math.PI, Math.PI);
     botType = type;
@@ -84,8 +90,9 @@ public class Bot extends SubsystemBase {
             .withControllerType(TunableControllerType.QUADRATIC);
     DriveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
     drivetrain = new Drive(currentDriveTrain);
-    ArmIOSIM temp = new ArmIOSIM();
-    elevator = new Elevator(new ElevatorIOSIM(temp.getMechanismRoot()));
+    ElevatorIOSIM temp1 = new ElevatorIOSIM();
+    ArmIOSIM temp = new ArmIOSIM(temp1);
+    elevator = new Elevator(temp1);
     arm = new Arm(temp);
     intake = new Intake(new IntakeIOSIM());
 
@@ -148,6 +155,44 @@ public class Bot extends SubsystemBase {
                     ),
                 drivetrain::getVisionParameters));
 
+    visionCoral =
+        new VisionCoral(
+            new VisionIOPhotonVisionSIMCoral(
+                "TopRight",
+                new Transform3d(
+                    new Translation3d(
+                        Units.inchesToMeters(2),
+                        Units.inchesToMeters(5),
+                        Units.inchesToMeters(54)), // IN
+                    // METERS
+                    new Rotation3d(0, Units.degreesToRadians(40), Units.degreesToRadians(-25)) // IN
+                    // RADIANS
+                    ),
+                drivetrain::getVisionParameters),
+            new VisionIOPhotonVisionSIMCoral(
+                "TopMid",
+                new Transform3d(
+                    new Translation3d(
+                        Units.inchesToMeters(2),
+                        Units.inchesToMeters(0),
+                        Units.inchesToMeters(54)), // IN
+                    // METERS
+                    new Rotation3d(0, Units.degreesToRadians(40), Units.degreesToRadians(0)) // IN
+                    // RADIANS
+                    ),
+                drivetrain::getVisionParameters),
+            new VisionIOPhotonVisionSIMCoral(
+                "TopLeft",
+                new Transform3d(
+                    new Translation3d(
+                        Units.inchesToMeters(2),
+                        Units.inchesToMeters(-5),
+                        Units.inchesToMeters(54)), // IN
+                    // METERS
+                    new Rotation3d(0, Units.degreesToRadians(40), Units.degreesToRadians(25)) // IN
+                    // RADIANS
+                    ),
+                drivetrain::getVisionParameters));
     memory = new Memory(botType);
     memory.updateNextBest(drivetrain.getPose());
     elevator.IDLE().schedule();
@@ -157,14 +202,9 @@ public class Bot extends SubsystemBase {
         drivetrain.applyRequest(
             () ->
                 drive
-                    .withVelocityX(MaxSpeed.times(joystick.getLeftY()))
-                    .withVelocityY(MaxSpeed.times(joystick.getLeftX()))
-                    .withRotationalRate(Constants.MaxAngularRate.times(joystick.getRightX()))));
-    currentTarget =
-        new Pose2d(
-            drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d().getX(),
-            drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d().getY(),
-            drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d().getAngle());
+                    .withVelocityX(MaxSpeed.times(-joystick.getLeftY()))
+                    .withVelocityY(MaxSpeed.times(-joystick.getLeftX()))
+                    .withRotationalRate(Constants.MaxAngularRate.times(-joystick.getRightX()))));
     Pathfinding.setStartPosition(drivetrain.getPose().getTranslation());
     currentCommand = new ReturnTrue();
     currentCommand.schedule();
@@ -172,105 +212,119 @@ public class Bot extends SubsystemBase {
 
   @Override
   public void periodic() {
-    Logger.recordOutput("Bot/State", state);
-    Logger.recordOutput("States/ROBOT", state);
-    SimCoral.loggingPeriodic(drivetrain.getPose());
-    if (DriverStation.isEnabled()) {
-      if (currentCommand.isFinished()) {
-        switch (state) {
-          case TOREEF:
-            state = States.ALIGN;
-            translation.reset();
-            translationy.reset();
-            rotation.reset();
-            currentCommand = new Align(arm, elevator, intake, memory);
-            Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
-            Logger.recordOutput("Coral Pose", getSimCoralPose());
-            break;
-          case ALIGN:
-            if (drivetrain.isAtTarget() && arm.isAtTarget() && elevator.isAtTarget()) {
-              state = States.PLACE;
-              currentCommand = new Place(drivetrain, arm, elevator, intake, memory);
-            } else {
-              drivetrain
-                  .applyRequest(
-                      () ->
-                          drive
-                              .withVelocityX(
-                                  MaxSpeed.times(
-                                      translation.calculate(
-                                          drivetrain.getPose().getX(),
-                                          drivetrain.getReefPosition().getPose().getX())))
-                              .withVelocityY(
-                                  MaxSpeed.times(
-                                      translationy.calculate(
-                                          drivetrain.getPose().getY(),
-                                          drivetrain.getReefPosition().getPose().getY())))
-                              .withRotationalRate(
-                                  Constants.MaxAngularRate.times(
-                                      rotation.calculate(
-                                          drivetrain
-                                              .getPose()
-                                              .getRotation()
-                                              .minus(
-                                                  drivetrain
-                                                      .getReefPosition()
-                                                      .getPose()
-                                                      .getRotation()
-                                                      .toRotation2d())
-                                              .minus(new Rotation2d(Degrees.of(180)))
-                                              .getDegrees(),
-                                          0))))
-                  .schedule();
-            }
-            break;
-          case PLACE:
-            state = States.TOINTAKE;
-            currentCommand = newAutoToIntake();
-            memory.updateNextBest(getSimCoralPose().getTranslation());
-            drivetrain.setReefPosition(memory.getCurrentTarget().getReefPosition());
-            Pathfinding.setGoalPosition(
-                drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d());
-            break;
-          case TOINTAKE:
-            state = States.AUTOINTAKE;
-            hasCoral = false;
-            arm.PREPINTAKE().schedule();
-            intake.INTAKE().schedule();
-            currentCommand = new ReturnTrue();
-            break;
-          case AUTOINTAKE:
-            if (intakeIsReady() || firstRun) {
-              state = States.TOREEF;
-              arm.CORALIDLE().schedule();
-              if (!firstRun) {
-                if (drivetrain.isRightSource()) {
-                  SimCoral.DropR().schedule();
-                } else {
-                  SimCoral.DropL().schedule();
-                }
+    visionCoral.updateModels(SimCoral.getGroundCoral());
+    if (!testingBot) {
+      Logger.recordOutput("Bot/State", state);
+      Logger.recordOutput("States/ROBOT", state);
+      SimCoral.loggingPeriodic(drivetrain.getPose());
+      if (DriverStation.isEnabled()) {
+        if (currentCommand.isFinished()) {
+          switch (state) {
+            case TOREEF:
+              state = States.ALIGN;
+              translation.reset();
+              translationy.reset();
+              rotation.reset();
+              currentCommand = new Align(arm, elevator, intake, memory);
+              //   Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
+              Logger.recordOutput("Coral Pose", getSimCoralPose());
+              break;
+            case ALIGN:
+              if (drivetrain.isAtTarget() && arm.isAtTarget() && elevator.isAtTarget()) {
+                state = States.PLACE;
+                currentCommand = new Place(drivetrain, arm, elevator, intake, memory);
               } else {
-                SimCoral.DropR().schedule();
-                SimCoral.DropL().schedule();
+                drivetrain
+                    .applyRequest(
+                        () ->
+                            drive
+                                .withVelocityX(
+                                    MaxSpeed.times(
+                                        translation.calculate(
+                                            drivetrain.getPose().getX(),
+                                            drivetrain.getReefPosition().getPose().getX())))
+                                .withVelocityY(
+                                    MaxSpeed.times(
+                                        translationy.calculate(
+                                            drivetrain.getPose().getY(),
+                                            drivetrain.getReefPosition().getPose().getY())))
+                                .withRotationalRate(
+                                    Constants.MaxAngularRate.times(
+                                        rotation.calculate(
+                                            drivetrain
+                                                .getPose()
+                                                .getRotation()
+                                                .minus(
+                                                    drivetrain
+                                                        .getReefPosition()
+                                                        .getPose()
+                                                        .getRotation()
+                                                        .toRotation2d())
+                                                .minus(new Rotation2d(Degrees.of(180)))
+                                                .getDegrees(),
+                                            0))))
+                    .schedule();
               }
-              firstRun = false;
-              currentCommand = newAutoToReef();
-            } else {
-              runIntake();
-            }
-            break;
-          default:
-            break;
-        }
-        currentCommand.schedule();
-      } else {
-        switch (state) {
-          case ALIGN:
-            break;
-          default:
-            break;
+              break;
+            case PLACE:
+              state = States.TOINTAKE;
+              currentCommand = newAutoToIntake();
+              memory.updateNextBest(getSimCoralPose().getTranslation());
+              drivetrain.setReefPosition(memory.getCurrentTarget().getReefPosition());
+              break;
+            case TOINTAKE:
+              state = States.AUTOINTAKE;
+              hasCoral = false;
+              arm.PREPINTAKE().schedule();
+              intake.INTAKE().schedule();
+              currentCommand = new ReturnTrue();
+              //   Pathfinding.setGoalPosition(
+              //       drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d());
+              break;
+            case AUTOINTAKE:
+              if (intakeIsReady() || firstRun) {
+                state = States.TOREEF;
+                arm.CORALIDLE().schedule();
+                if (!firstRun) {
+                  if (drivetrain.isRightSource()) {
+                    SimCoral.DropR().schedule();
+                  } else {
+                    SimCoral.DropL().schedule();
+                  }
+                  currentCommand = newAutoToReef();
+                } else {
+                  SimCoral.DropR().schedule();
+                  SimCoral.DropL().schedule();
+                  currentCommand = newOldAutoToReef();
+                }
+                firstRun = false;
+              } else {
+                runIntake();
+              }
+              break;
+            default:
+              break;
+          }
+          currentCommand.schedule();
+        } else {
+          switch (state) {
+            case TOINTAKE:
+              //   if (Pathfinding.isNewPathAvailable()) {
+              // currentCommand = newAutoToIntake();
+              // currentCommand.schedule();
+              //   }
+              //   Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
+              break;
+            default:
+              break;
+          }
         }
       }
+    } else {
+      joystick.a().onTrue(arm.IDLE());
+      joystick.b().onTrue(arm.PREPINTAKE());
+      joystick.x().onTrue(arm.L4());
+      joystick.y().onTrue(arm.L1());
     }
   }
 
@@ -340,76 +394,38 @@ public class Bot extends SubsystemBase {
   }
 
   private Command newAutoToIntake() {
-    Logger.recordOutput(
-        "Path",
-        Pathfinding.getCurrentPath(
-                constraints,
-                new GoalEndState(
-                    MetersPerSecond.of(0.0),
-                    getSimCoralPose()
-                        .getRotation()
-                        .minus(new Rotation2d(Units.degreesToRadians(180)))))
-            .getPathPoses()
-            .toArray(
-                new Pose2d
-                    [Pathfinding.getCurrentPath(
-                            constraints,
-                            new GoalEndState(
-                                MetersPerSecond.of(0.0),
-                                getSimCoralPose()
-                                    .getRotation()
-                                    .minus(new Rotation2d(Units.degreesToRadians(180)))))
-                        .getPathPoses()
-                        .size()]));
-    return AutoBuilder.followPath(
-        Pathfinding.getCurrentPath(
-            new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
-            new GoalEndState(
-                MetersPerSecond.of(0.0),
-                getSimCoralPose()
-                    .getRotation()
-                    .minus(new Rotation2d(Units.degreesToRadians(180))))));
+    return AutoBuilder.pathfindToPose(
+        new Pose2d(
+            getSimCoralPose().getTranslation(),
+            getSimCoralPose().getRotation().plus(Rotation2d.fromDegrees(180))),
+        constraints,
+        0);
   }
 
   private Command newAutoToReef() {
-    Logger.recordOutput(
-        "Path",
-        Pathfinding.getCurrentPath(
-                constraints,
-                new GoalEndState(
-                    MetersPerSecond.of(0.0),
-                    drivetrain
-                        .getReefPosition()
-                        .getAngle()
-                        .minus(new Rotation2d(Units.degreesToRadians(0)))))
-            .getPathPoses()
-            .toArray(
-                new Pose2d
-                    [Pathfinding.getCurrentPath(
-                            constraints,
-                            new GoalEndState(
-                                MetersPerSecond.of(0.0),
-                                drivetrain
-                                    .getReefPosition()
-                                    .getAngle()
-                                    .minus(new Rotation2d(Units.degreesToRadians(0)))))
-                        .getPathPoses()
-                        .size()]));
+    return AutoBuilder.pathfindToPose(
+        new Pose2d(
+            drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d(),
+            drivetrain
+                .getReefPosition()
+                .getPose()
+                .getRotation()
+                .toRotation2d()
+                .plus(Rotation2d.fromDegrees(180))),
+        constraints,
+        0);
+  }
+
+  private Command newOldAutoToReef() {
     return AutoBuilder.followPath(
         Pathfinding.getCurrentPath(
-            new PathConstraints(5.72, 14.7, 4.634, Units.degreesToRadians(1136)),
+            constraints,
             new GoalEndState(
                 MetersPerSecond.of(0),
                 drivetrain
                     .getReefPosition()
                     .getAngle()
                     .plus(new Rotation2d(Units.degreesToRadians(180))))));
-    // currentTarget =
-    // new Pose2d(
-    // drivetrain.getReefPosition().getPose().getX(),
-    // drivetrain.getReefPosition().getPose().getY(),
-    // drivetrain.getReefPosition().getPose().getAngle());
-    // return AutoBuilder.pathfindToPose(currentTarget, constraints);
   }
 
   private Pose2d getSimCoralPose() {

@@ -35,12 +35,9 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
           true,
           0);
 
-  private final LoggedMechanismLigament2d m_arm;
+  private LoggedMechanismLigament2d m_arm = null;
 
-  public ElevatorIOSIM(LoggedMechanismRoot2d m_armPivot) {
-    m_arm =
-        m_armPivot.append(
-            new LoggedMechanismLigament2d("Elevator", 0, 0, 5, new Color8Bit(Color.kGreen)));
+  public ElevatorIOSIM() {
     SmartDashboard.putNumber("EleP", controller.getP());
     SmartDashboard.putNumber("EleI", controller.getI());
     SmartDashboard.putNumber("EleD", controller.getD());
@@ -55,31 +52,42 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
 
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
-    controller.setP(SmartDashboard.getNumber("EleP", 0));
-    controller.setI(SmartDashboard.getNumber("EleI", 0));
-    controller.setD(SmartDashboard.getNumber("EleD", 0));
+    if (m_arm != null) {
+      controller.setP(SmartDashboard.getNumber("EleP", 0));
+      controller.setI(SmartDashboard.getNumber("EleI", 0));
+      controller.setD(SmartDashboard.getNumber("EleD", 0));
 
-    talonfx.setVoltage(
-        controller.calculate((m_elevatorSim.getPositionMeters()), Units.inchesToMeters(setpoint)));
+      talonfx.setVoltage(
+          controller.calculate(
+              (m_elevatorSim.getPositionMeters()), Units.inchesToMeters(setpoint)));
 
-    m_elevatorSim.setInput(talonfx.get() * RobotController.getBatteryVoltage());
+      m_elevatorSim.setInput(talonfx.get() * RobotController.getBatteryVoltage());
 
-    m_elevatorSim.update(0.020);
+      m_elevatorSim.update(0.020);
 
-    RoboRioSim.setVInVoltage(
-        BatterySim.calculateDefaultBatteryLoadedVoltage(m_elevatorSim.getCurrentDrawAmps()));
+      RoboRioSim.setVInVoltage(
+          BatterySim.calculateDefaultBatteryLoadedVoltage(m_elevatorSim.getCurrentDrawAmps()));
 
-    m_arm.setLength(m_elevatorSim.getPositionMeters() + Units.inchesToMeters(27));
+      m_arm.setLength(m_elevatorSim.getPositionMeters() + Units.inchesToMeters(27));
 
-    m_arm.setAngle(SmartDashboard.getNumber("Arm Angle", 0));
+      inputs.distance = Meters.of(m_elevatorSim.getPositionMeters());
 
-    inputs.distance = Meters.of(m_elevatorSim.getPositionMeters());
-
-    inputs.setpoint = Inches.of(setpoint);
+      inputs.setpoint = Inches.of(setpoint);
+    }
   }
 
   @Override
   public void setDistance(Distance distance) {
     setpoint = distance.in(Inches);
+  }
+
+  public void setAngle(double angle) {
+    m_arm.setAngle(angle);
+  }
+
+  public void setRoot(LoggedMechanismRoot2d m_armPivot) {
+    m_arm =
+        m_armPivot.append(
+            new LoggedMechanismLigament2d("Elevator", 0, 0, 5, new Color8Bit(Color.kGreen)));
   }
 }

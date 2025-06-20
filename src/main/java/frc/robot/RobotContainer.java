@@ -4,7 +4,7 @@ import frc.robot.subsystems.bot.Bot;
 import frc.robot.subsystems.bot.Bot.BotType;
 
 public class RobotContainer {
-  private final boolean testingBot = true;
+  private final boolean testingBot = false;
 
   private final BotType botType = BotType.CYCLES;
 

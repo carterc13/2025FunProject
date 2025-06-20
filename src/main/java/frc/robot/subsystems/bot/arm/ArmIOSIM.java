@@ -12,16 +12,16 @@ import edu.wpi.first.wpilibj.motorcontrol.PWMTalonFX;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.robot.subsystems.bot.elevator.ElevatorIOSIM;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 public class ArmIOSIM extends ArmIOCTRE {
-  private final DCMotor motor = DCMotor.getKrakenX60(2);
+  private final DCMotor motor = DCMotor.getKrakenX60Foc(2);
   private final PWMTalonFX talonfx = new PWMTalonFX(0);
   private final PIDController controller = new PIDController(0.5, 0, 0.01);
   private double setpoint = 50;
@@ -40,10 +40,6 @@ public class ArmIOSIM extends ArmIOCTRE {
   private final LoggedMechanism2d m_mech2d = new LoggedMechanism2d(60.5, 6);
   private final LoggedMechanismRoot2d m_armPivot =
       m_mech2d.getRoot("ArmPivot", 30, Units.inchesToMeters(8));
-  private final LoggedMechanismLigament2d m_armTower =
-      m_armPivot.append(
-          new LoggedMechanismLigament2d(
-              "ArmTower", Units.inchesToMeters(6), -90, 12, new Color8Bit(Color.kBlueViolet)));
   private final LoggedMechanismLigament2d m_arm =
       m_armPivot.append(
           new LoggedMechanismLigament2d(
@@ -53,7 +49,12 @@ public class ArmIOSIM extends ArmIOCTRE {
               8,
               new Color8Bit(Color.kBlueViolet)));
 
-  public ArmIOSIM() {}
+  private final ElevatorIOSIM elevator;
+
+  public ArmIOSIM(ElevatorIOSIM elevator) {
+    this.elevator = elevator;
+    elevator.setRoot(m_armPivot);
+  }
 
   @Override
   public void updateInputs(ArmIOInputs inputs) {
@@ -73,7 +74,7 @@ public class ArmIOSIM extends ArmIOCTRE {
 
     inputs.setpoint = Degrees.of(setpoint);
 
-    SmartDashboard.putNumber("Arm Angle", inputs.angle.in(Degrees));
+    elevator.setAngle(inputs.angle.in(Degrees));
 
     Logger.recordOutput("Arm3", m_mech2d);
   }
@@ -81,9 +82,5 @@ public class ArmIOSIM extends ArmIOCTRE {
   @Override
   public void setAngle(Angle angle) {
     setpoint = angle.in(Degrees);
-  }
-
-  public LoggedMechanismRoot2d getMechanismRoot() {
-    return m_armPivot;
   }
 }

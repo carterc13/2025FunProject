@@ -298,6 +298,36 @@ public class VisionUtil {
     }
   }
 
+  /** Record containing collections of vision measurements, categorized by acceptance status. */
+  public record CoralVisionData(
+      List<Pose3d> coralPoses, List<Pose3d> acceptedCoralPoses, List<Pose3d> rejectedCoralPoses) {
+
+    /** Creates an empty CoralVisionData object. */
+    public static CoralVisionData empty() {
+      return new CoralVisionData(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    }
+
+    /** Merges two lists of the same type. */
+    private static <T> List<T> mergeLists(List<T> list1, List<T> list2) {
+      ArrayList<T> merged = new ArrayList<>(list1);
+      merged.addAll(list2);
+      return merged;
+    }
+
+    /**
+     * Combines this VisionData with another, merging all corresponding lists.
+     *
+     * @param other The VisionData to merge with
+     * @return A new VisionData containing all elements from both objects
+     */
+    public CoralVisionData merge(CoralVisionData other) {
+      return new CoralVisionData(
+          mergeLists(coralPoses, other.coralPoses),
+          mergeLists(acceptedCoralPoses, other.acceptedCoralPoses),
+          mergeLists(rejectedCoralPoses, other.rejectedCoralPoses));
+    }
+  }
+
   /**
    * Validation helper method to check if MT2 measurements are being used before match start.
    *

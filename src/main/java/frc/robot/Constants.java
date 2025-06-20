@@ -39,7 +39,7 @@ public final class Constants {
   public static final AngularVelocity MaxModuleRate = RotationsPerSecond.of(20.0);
 
   // PathPlanner config constants
-  private static final Mass ROBOT_MASS = Kilogram.of(32.36);
+  private static final Mass ROBOT_MASS = Kilogram.of(56.699);
   // 15.2
   private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(9.265);
   private static final double WHEEL_COF = 1.5;
@@ -70,13 +70,26 @@ public final class Constants {
               SWERVE_MODULE_CONSTANTS.WheelRadius,
               TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
               WHEEL_COF,
-              DCMotor.getKrakenX60(1).withReduction(SWERVE_MODULE_CONSTANTS.DriveMotorGearRatio),
+              DCMotor.getKrakenX60Foc(1).withReduction(SWERVE_MODULE_CONSTANTS.DriveMotorGearRatio),
               SWERVE_MODULE_CONSTANTS.SlipCurrent,
               1),
           SWERVE_MODULE_OFFSETS);
 
   public static final SwerveSetpointGenerator setpointGenerator =
       new SwerveSetpointGenerator(Constants.PP_CONFIG, Units.rotationsToRadians(10.0));
+
+  public static final class CameraConstants {
+    public static final double CAMERA_FX_PIXELS = 480.0;
+    public static final double CAMERA_FY_PIXELS = 360.0;
+    public static final double CAMERA_CX_PIXELS = 960.0 / 2.0;
+    public static final double CAMERA_CY_PIXELS = 720.0 / 2.0;
+
+    public static final double OBJECT_WIDTH_INCHES = Units.inchesToMeters(4.5);
+    public static final double OBJECT_HEIGHT_INCHES = Units.inchesToMeters(11.875);
+    public static final double OBJECT_DEPTH_INCHES = Units.inchesToMeters(4.5);
+
+    public static final double MIN_TARGET_AREA = 50;
+  }
 
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
@@ -92,7 +105,8 @@ public final class Constants {
   }
 
   static {
-    // Checks to make sure config matches GUI values. Code should not throw as not breaking
+    // Checks to make sure config matches GUI values. Code should not throw as not
+    // breaking
     if (!PP_CONFIG.hasValidConfig()) {
       String error = "Invalid robot configuration detected in PP_CONFIG";
       System.err.println(error);

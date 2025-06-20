@@ -15,6 +15,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.opencv.core.Core;
 
 public class Robot extends LoggedRobot {
   // Configuration constants
@@ -24,6 +25,8 @@ public class Robot extends LoggedRobot {
 
   public Robot() {
     Pathfinding.setPathfinder(new LocalADStarAK());
+
+    System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
     // Set up data receivers & replay source
     switch (Constants.currentMode) {

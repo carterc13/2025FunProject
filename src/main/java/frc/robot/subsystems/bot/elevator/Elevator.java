@@ -88,9 +88,21 @@ public class Elevator extends SubsystemBase {
     return Commands.runOnce(() -> setDistance(position.targetDistance));
   }
 
+  public boolean isnt(ElevatorPosition elevatorPosition) {
+    return this.currentMode != elevatorPosition;
+  }
+
   @AutoLogOutput
   public boolean isAtTarget() {
     return inputs.distance.isNear(currentMode.targetDistance, currentMode.distanceTolerance);
+  }
+
+  public boolean isIdle() {
+    return getMode() == ElevatorPosition.IDLE;
+  }
+
+  public Command setPosition(ElevatorPosition elevatorPosition) {
+    return setPositionCommand(elevatorPosition);
   }
 
   private Command setPositionCommand(ElevatorPosition distance) {

@@ -562,6 +562,38 @@ public class LimelightHelpers {
     }
   }
 
+  public record CoralObservation(
+      Pose3d[] coralEstimates, Pose3d[] acceptedCoralEstimates, Pose3d[] rejectedCoralEstimates) {
+
+    public CoralObservation() {
+      this(new Pose3d[] {}, new Pose3d[] {}, new Pose3d[] {});
+    }
+
+    public boolean isValid() {
+      if (coralEstimates.length > 0) {
+        for (int i = 0; i < coralEstimates.length; i++) {
+          if (coralEstimates[i] == null) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public String toString() {
+      if (!isValid()) {
+        return "Invalid Coral Observation data.";
+      }
+
+      StringBuilder sb = new StringBuilder("Coral Estimate Information:\n");
+      sb.append(coralEstimates.toString().indent(2));
+      return sb.toString();
+    }
+  }
+
   /** Encapsulates the state of an internal Limelight IMU. */
   public static class IMUData {
     public double robotYaw = 0.0;

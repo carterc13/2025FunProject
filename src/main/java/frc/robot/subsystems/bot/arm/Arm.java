@@ -105,8 +105,16 @@ public class Arm extends SubsystemBase {
     return inputs.angle.isNear(currentMode.targetAngle, currentMode.angleTolerance);
   }
 
+  public boolean isnt(ArmPosition armPosition) {
+    return this.currentMode != armPosition;
+  }
+
   private Command setPositionCommand(ArmPosition angle) {
     return Commands.runOnce(() -> setArmPosition(angle));
+  }
+
+  public Command setPosition(ArmPosition armPosition) {
+    return setPositionCommand(armPosition);
   }
 
   public final Command IDLE() {
