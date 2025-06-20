@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -192,6 +193,30 @@ public class Bot extends SubsystemBase {
                     new Rotation3d(0, Units.degreesToRadians(40), Units.degreesToRadians(25)) // IN
                     // RADIANS
                     ),
+                drivetrain::getVisionParameters),
+            new VisionIOPhotonVisionSIMCoral(
+                "Left",
+                new Transform3d(
+                    new Translation3d(
+                        Units.inchesToMeters(-2),
+                        Units.inchesToMeters(-10),
+                        Units.inchesToMeters(54)), // IN
+                    // METERS
+                    new Rotation3d(0, Units.degreesToRadians(40), Units.degreesToRadians(90)) // IN
+                    // RADIANS
+                    ),
+                drivetrain::getVisionParameters),
+            new VisionIOPhotonVisionSIMCoral(
+                "Right",
+                new Transform3d(
+                    new Translation3d(
+                        Units.inchesToMeters(-2),
+                        Units.inchesToMeters(10),
+                        Units.inchesToMeters(54)), // IN
+                    // METERS
+                    new Rotation3d(0, Units.degreesToRadians(40), Units.degreesToRadians(-90)) // IN
+                    // RADIANS
+                    ),
                 drivetrain::getVisionParameters));
     memory = new Memory(botType);
     memory.updateNextBest(drivetrain.getPose());
@@ -216,6 +241,7 @@ public class Bot extends SubsystemBase {
     if (!testingBot) {
       Logger.recordOutput("Bot/State", state);
       Logger.recordOutput("States/ROBOT", state);
+      Logger.recordOutput("Coral Pose", getSimCoralPose());
       SimCoral.loggingPeriodic(drivetrain.getPose());
       if (DriverStation.isEnabled()) {
         if (currentCommand.isFinished()) {
@@ -226,8 +252,7 @@ public class Bot extends SubsystemBase {
               translationy.reset();
               rotation.reset();
               currentCommand = new Align(arm, elevator, intake, memory);
-              //   Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
-              Logger.recordOutput("Coral Pose", getSimCoralPose());
+              // Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
               break;
             case ALIGN:
               if (drivetrain.isAtTarget() && arm.isAtTarget() && elevator.isAtTarget()) {
@@ -278,8 +303,8 @@ public class Bot extends SubsystemBase {
               arm.PREPINTAKE().schedule();
               intake.INTAKE().schedule();
               currentCommand = new ReturnTrue();
-              //   Pathfinding.setGoalPosition(
-              //       drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d());
+              // Pathfinding.setGoalPosition(
+              // drivetrain.getReefPosition().getPose().getTranslation().toTranslation2d());
               break;
             case AUTOINTAKE:
               if (intakeIsReady() || firstRun) {
@@ -309,11 +334,11 @@ public class Bot extends SubsystemBase {
         } else {
           switch (state) {
             case TOINTAKE:
-              //   if (Pathfinding.isNewPathAvailable()) {
+              // if (Pathfinding.isNewPathAvailable()) {
               // currentCommand = newAutoToIntake();
               // currentCommand.schedule();
-              //   }
-              //   Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
+              // }
+              // Pathfinding.setGoalPosition(getSimCoralPose().getTranslation());
               break;
             default:
               break;
@@ -325,6 +350,11 @@ public class Bot extends SubsystemBase {
       joystick.b().onTrue(arm.PREPINTAKE());
       joystick.x().onTrue(arm.L4());
       joystick.y().onTrue(arm.L1());
+      if (firstRun && DriverStation.isEnabled() && currentCommand.isFinished()) {
+        SimCoral.DropR().schedule();
+        SimCoral.DropL().schedule();
+        firstRun = false;
+      }
     }
   }
 
@@ -396,10 +426,10 @@ public class Bot extends SubsystemBase {
   private Command newAutoToIntake() {
     return AutoBuilder.pathfindToPose(
         new Pose2d(
-            getSimCoralPose().getTranslation(),
+            getSimCoralPoseAndOffset().getTranslation(),
             getSimCoralPose().getRotation().plus(Rotation2d.fromDegrees(180))),
         constraints,
-        0);
+        2);
   }
 
   private Command newAutoToReef() {
@@ -429,61 +459,101 @@ public class Bot extends SubsystemBase {
   }
 
   private Pose2d getSimCoralPose() {
-    return SimCoral.getLeftPose()
+    return getClosestPose2dOnCircle(visionCoral.getRightCoralPose(), drivetrain.getPose())
                 .getTranslation()
                 .getDistance(drivetrain.getPose().getTranslation())
-            > SimCoral.getRightPose()
+            < getClosestPose2dOnCircle(visionCoral.getLeftCoralPose(), drivetrain.getPose())
                 .getTranslation()
-                .getDistance(AutoBuilder.getCurrentPose().getTranslation())
-        ? SimCoral.getRightPose()
-                    .plus(
-                        new Transform2d(
-                            0,
-                            Units.inchesToMeters(32),
-                            new Rotation2d(Units.degreesToRadians(90))))
-                    .getTranslation()
-                    .getDistance(drivetrain.getPose().getTranslation())
-                > SimCoral.getRightPose()
-                    .plus(
-                        new Transform2d(
-                            0,
-                            Units.inchesToMeters(-32),
-                            new Rotation2d(Units.degreesToRadians(-90))))
-                    .getTranslation()
-                    .getDistance(drivetrain.getPose().getTranslation())
-            ? SimCoral.getRightPose()
-                .plus(
-                    new Transform2d(
-                        0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))))
-            : SimCoral.getRightPose()
-                .plus(
-                    new Transform2d(
-                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))))
-        : SimCoral.getLeftPose()
-                    .plus(
-                        new Transform2d(
-                            0,
-                            Units.inchesToMeters(32),
-                            new Rotation2d(Units.degreesToRadians(90))))
-                    .getTranslation()
-                    .getDistance(drivetrain.getPose().getTranslation())
-                > SimCoral.getLeftPose()
-                    .plus(
-                        new Transform2d(
-                            0,
-                            Units.inchesToMeters(-32),
-                            new Rotation2d(Units.degreesToRadians(-90))))
-                    .getTranslation()
-                    .getDistance(drivetrain.getPose().getTranslation())
-            ? SimCoral.getLeftPose()
-                .plus(
-                    new Transform2d(
-                        0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))))
-            : SimCoral.getLeftPose()
-                .plus(
-                    new Transform2d(
-                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))));
+                .getDistance(drivetrain.getPose().getTranslation())
+        ? getClosestPose2dOnCircle(visionCoral.getRightCoralPose(), drivetrain.getPose())
+        : getClosestPose2dOnCircle(visionCoral.getLeftCoralPose(), drivetrain.getPose());
   }
+
+  private Pose2d getSimCoralPoseAndOffset() {
+    return (getClosestPose2dOnCircle(visionCoral.getRightCoralPose(), drivetrain.getPose())
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation())
+                < getClosestPose2dOnCircle(visionCoral.getLeftCoralPose(), drivetrain.getPose())
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation())
+            ? getClosestPose2dOnCircle(visionCoral.getRightCoralPose(), drivetrain.getPose())
+            : getClosestPose2dOnCircle(visionCoral.getLeftCoralPose(), drivetrain.getPose()))
+        .transformBy(new Transform2d(0.3, 0, new Rotation2d()));
+  }
+
+  public static Pose2d getClosestPose2dOnCircle(Pose2d circleCenterPose, Pose2d robotPose) {
+    Translation2d relativeRobotTranslation =
+        robotPose.getTranslation().minus(circleCenterPose.getTranslation());
+
+    double angleFromCenterToRobot =
+        Math.atan2(relativeRobotTranslation.getY(), relativeRobotTranslation.getX());
+
+    Translation2d closestTranslationRelative =
+        new Translation2d(
+            Units.inchesToMeters(32) * Math.cos(angleFromCenterToRobot),
+            Units.inchesToMeters(32) * Math.sin(angleFromCenterToRobot));
+
+    Translation2d closestTranslationField =
+        closestTranslationRelative.plus(circleCenterPose.getTranslation());
+
+    return new Pose2d(closestTranslationField, new Rotation2d(angleFromCenterToRobot));
+  }
+
+  /*
+  private Pose2d getSimCoralPose() {
+    return SimCoral.getLeftPose()
+        .getTranslation()
+        .getDistance(drivetrain.getPose().getTranslation()) > SimCoral.getRightPose()
+            .getTranslation()
+            .getDistance(AutoBuilder.getCurrentPose().getTranslation())
+                ? SimCoral.getRightPose()
+                    .plus(
+                        new Transform2d(
+                            0,
+                            Units.inchesToMeters(32),
+                            new Rotation2d(Units.degreesToRadians(90))))
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation()) > SimCoral.getRightPose()
+                        .plus(
+                            new Transform2d(
+                                0,
+                                Units.inchesToMeters(-32),
+                                new Rotation2d(Units.degreesToRadians(-90))))
+                        .getTranslation()
+                        .getDistance(drivetrain.getPose().getTranslation())
+                            ? SimCoral.getRightPose()
+                                .plus(
+                                    new Transform2d(
+                                        0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))))
+                            : SimCoral.getRightPose()
+                                .plus(
+                                    new Transform2d(
+                                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))))
+                : SimCoral.getLeftPose()
+                    .plus(
+                        new Transform2d(
+                            0,
+                            Units.inchesToMeters(32),
+                            new Rotation2d(Units.degreesToRadians(90))))
+                    .getTranslation()
+                    .getDistance(drivetrain.getPose().getTranslation()) > SimCoral.getLeftPose()
+                        .plus(
+                            new Transform2d(
+                                0,
+                                Units.inchesToMeters(-32),
+                                new Rotation2d(Units.degreesToRadians(-90))))
+                        .getTranslation()
+                        .getDistance(drivetrain.getPose().getTranslation())
+                            ? SimCoral.getLeftPose()
+                                .plus(
+                                    new Transform2d(
+                                        0, Units.inchesToMeters(-32), new Rotation2d(Units.degreesToRadians(-90))))
+                            : SimCoral.getLeftPose()
+                                .plus(
+                                    new Transform2d(
+                                        0, Units.inchesToMeters(32), new Rotation2d(Units.degreesToRadians(90))));
+  }
+                                        */
 
   public enum BotType {
     CYCLES(),

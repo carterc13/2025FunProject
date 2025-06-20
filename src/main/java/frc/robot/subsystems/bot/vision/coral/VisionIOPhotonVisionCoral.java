@@ -29,6 +29,8 @@ public class VisionIOPhotonVisionCoral implements VisionIOCoral {
   PhotonPipelineResult latestResult;
   List<PhotonTrackedTarget> cameraTargets;
 
+  double rejectionDistance = 4.5;
+
   public Pose3d[] coralPoses = new Pose3d[] {};
   public Pose3d[] acceptedCoralPoses = new Pose3d[] {};
   public Pose3d[] rejectedCoralPoses = new Pose3d[] {};
@@ -133,7 +135,7 @@ public class VisionIOPhotonVisionCoral implements VisionIOCoral {
                 .getTranslation()
                 .toTranslation2d()
                 .getDistance(visionParams.get().robotPose().getTranslation())
-            < 5) {
+            < rejectionDistance) {
           acceptedCoralPoses = addPose(acceptedCoralPoses, prismPose);
         } else {
           rejectedCoralPoses = addPose(rejectedCoralPoses, prismPose);

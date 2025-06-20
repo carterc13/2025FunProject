@@ -6,6 +6,7 @@
 
 package frc.robot.subsystems.bot.vision.coral;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -13,6 +14,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.utils.PoseComputer;
 import java.util.ArrayList;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -29,6 +31,8 @@ public class VisionCoral extends SubsystemBase {
   private ArrayList<Pose3d> coralPoses = new ArrayList<Pose3d>() {};
   private ArrayList<Pose3d> rejectedCoralPoses = new ArrayList<Pose3d>() {};
   private ArrayList<Pose3d> acceptedCoralPoses = new ArrayList<Pose3d>() {};
+  private Pose3d leftCoralPose = new Pose3d();
+  private Pose3d rightCoralPose = new Pose3d();
   TargetModel targetModel =
       new TargetModel(
           Units.inchesToMeters(11.875), Units.inchesToMeters(4.5), Units.inchesToMeters(4.5));
@@ -73,12 +77,40 @@ public class VisionCoral extends SubsystemBase {
       }
       Logger.processInputs(VISION_PATH + i, inputs[i]);
     }
+    ArrayList<Pose3d> temp = averageGroupedPoses(acceptedCoralPoses);
     Logger.recordOutput("VisionCoral/Coral Pose Estimates", arrayToOther(coralPoses));
-    Logger.recordOutput(
-        "VisionCoral/Accepted Coral Poses Average",
-        arrayToOther(averageGroupedPoses(acceptedCoralPoses)));
+    Logger.recordOutput("VisionCoral/Accepted Coral Poses Average", arrayToOther(temp));
     Logger.recordOutput("VisionCoral/Accepted Coral Poses", arrayToOther(acceptedCoralPoses));
     Logger.recordOutput("VisionCoral/Rejected Coral Poses", arrayToOther(rejectedCoralPoses));
+    if (temp.size() == 1) {
+      if (PoseComputer.isRightSource(() -> temp.get(0).getY())) {
+        rightCoralPose = temp.get(0);
+      } else {
+        leftCoralPose = temp.get(0);
+      }
+    } else if (temp.size() == 2) {
+      if (PoseComputer.isRightSource(() -> temp.get(0).getY())) {
+        rightCoralPose = temp.get(0);
+        leftCoralPose = temp.get(1);
+      } else {
+        rightCoralPose = temp.get(1);
+        leftCoralPose = temp.get(0);
+      }
+    }
+    Logger.recordOutput("VisionCoral/Accepted Right Coral Pose", rightCoralPose);
+    Logger.recordOutput("VisionCoral/Accepted Left Coral Pose", leftCoralPose);
+  }
+
+  public Pose2d getRightCoralPose() {
+    return new Pose2d(
+        rightCoralPose.getTranslation().toTranslation2d(),
+        rightCoralPose.getRotation().toRotation2d());
+  }
+
+  public Pose2d getLeftCoralPose() {
+    return new Pose2d(
+        leftCoralPose.getTranslation().toTranslation2d(),
+        leftCoralPose.getRotation().toRotation2d());
   }
 
   private ArrayList<Pose3d> averageGroupedPoses(ArrayList<Pose3d> poses) {

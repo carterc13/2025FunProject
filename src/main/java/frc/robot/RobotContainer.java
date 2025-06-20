@@ -8,6 +8,7 @@ public class RobotContainer {
 
   private final BotType botType = BotType.CYCLES;
 
+  @SuppressWarnings("unused")
   private final Bot bot;
   // private final RealDriver driver;
 
